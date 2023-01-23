@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(gsbutils LANGUAGES CXX VERSION 0.5.15)
+project(gsbutils LANGUAGES CXX VERSION 0.5.16)
 
 message(STATUS "${PROJECT_NAME}: ${PROJECT_VERSION}")
 
@@ -52,19 +52,19 @@ endif()
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_library(${PROJECT_NAME}${SUFF} STATIC ${SOURCES})
+if(${MAIN_PROJECT})
 
-if(TEST)
+  if(TEST)
     add_executable(test test/example.cpp)
     target_link_libraries(test PUBLIC gsbutils${SUFF})
-else() 
-  if(${MAIN_PROJECT})
-
+  else() 
+    add_library(${PROJECT_NAME}${SUFF} STATIC ${SOURCES})
     install(TARGETS ${PROJECT_NAME}${SUFF} DESTINATION  /usr/local/lib)
     set_property(TARGET ${PROJECT_NAME}${SUFF} PROPERTY BUILD_WITH_INSTALL_RPATH TRUE)
 
     install(FILES gsbutils.h debug.h SStrings.h TTimer.h DDate.h
           DESTINATION  /usr/local/include/gsbutils)
   endif()
-
+else()
+  add_library(${PROJECT_NAME}${SUFF} STATIC ${SOURCES})
 endif()
