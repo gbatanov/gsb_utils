@@ -1,0 +1,63 @@
+{
+    "version": 2,
+    "configurePresets": [
+        {
+            "name": "DebugComp",
+            "displayName": "Debug Comp",
+            "description": "Build and install directory",
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_TOOLCHAIN_FILE": "",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/build",
+                "DEBUG": "ON"
+             }
+        },{
+            "name": "TestComp",
+            "displayName": "Test Comp",
+            "description": "Build and install directory",
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug",
+                "CMAKE_TOOLCHAIN_FILE": "",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/build",
+                "DEBUG": "ON",
+                "TEST":"ON"
+             }
+        },
+        {
+            "name": "ReleaseComp",
+            "displayName": "Release Comp",
+            "description": "Build and install directory",
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_TOOLCHAIN_FILE": "",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/build"
+             }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "ReleaseBuildPresetComp",
+            "description": "",
+            "displayName": "ReleaseBuildPresetComp",
+            "configurePreset": "ReleaseComp"
+        },
+        {
+            "name": "DebugBuildPresetComp",
+            "description": "",
+            "displayName": "DebugBuildPresetComp",
+            "configurePreset": "DebugComp"
+        },
+        {
+            "name": "TestBuildPresetComp",
+            "description": "",
+            "displayName": "TestBuildPresetComp",
+            "configurePreset": "TestComp"
+        }
+    ]
+}
