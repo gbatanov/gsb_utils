@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(gsbutils LANGUAGES CXX VERSION 0.5.16)
+project(gsbutils LANGUAGES CXX VERSION 0.5.17)
 
 message(STATUS "${PROJECT_NAME}: ${PROJECT_VERSION}")
 
@@ -26,7 +26,7 @@ if(${MAIN_PROJECT})
   message(STATUS "${PROJECT_NAME} main project")
   configure_file(version.h.in ../version.h)
 else()
-  configure_file(../version.h.in ../../gsbutils/version.h)
+  configure_file(../version.h.in ../../gsb_utils/version.h)
 endif()
 
 set(CMAKE_BINARY_DIR bin)
