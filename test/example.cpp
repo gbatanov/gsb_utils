@@ -16,6 +16,7 @@ void cbfunc2()
 int main(int argc, char **argv)
 {
     openlog("zhub2", LOG_PID, LOG_LOCAL7); //(local7.log)
+    std::cout << (gsbutils::DDate::current_time()).c_str() << std::endl;
     std::thread msgt = std::thread(&gsbutils::printMsg);
 
     std::string ts1 = "iuyoyoiu";
