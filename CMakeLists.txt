@@ -1,7 +1,11 @@
 cmake_minimum_required(VERSION 3.16)
-project(gsbutils LANGUAGES CXX VERSION 0.5.19)
+project(gsbutils LANGUAGES CXX VERSION 0.6.20)
 
 message(STATUS "${PROJECT_NAME}: ${PROJECT_VERSION}")
+
+set(PREFIX /usr/local)
+set(VERSION ${PROJECT_VERSION})
+set(PROJECT_DESCRIPTION "Статическая библиотека вспомогательных утилит")
 
 # check main project or not
 set(MAIN_PROJECT OFF)
@@ -64,6 +68,9 @@ if(${MAIN_PROJECT})
 
     install(FILES gsbutils.h debug.h SStrings.h TTimer.h DDate.h
           DESTINATION  /usr/local/include/gsbutils)
+    configure_file(${PROJECT_NAME}.pc.in ${PROJECT_NAME}.pc @ONLY)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc DESTINATION ${PREFIX}/lib/pkgconfig)
+        
   endif()
 else()
   add_library(${PROJECT_NAME}${SUFF} STATIC ${SOURCES})
