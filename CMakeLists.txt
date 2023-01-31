@@ -1,11 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
-project(gsbutils LANGUAGES CXX VERSION 0.6.14)
+project(gsbutils LANGUAGES CXX VERSION 0.6.16)
 
 message(STATUS "${PROJECT_NAME}: ${PROJECT_VERSION}")
-
-set(PREFIX /usr/local)
-set(VERSION ${PROJECT_VERSION})
-set(PROJECT_DESCRIPTION "Статическая библиотека вспомогательных утилит")
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -I. -fPIC -pthread -std=c++2a -Wno-unused-result -Wno-unused-variable")
 
@@ -38,6 +34,10 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(PREFIX /usr/local)
+if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
+   set(PREFIX /opt/local)
+endif()
+
 set(VERSION ${PROJECT_VERSION})
 set(PROJECT_DESCRIPTION "Библиотека утилит")
 
