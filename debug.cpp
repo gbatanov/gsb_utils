@@ -25,16 +25,14 @@
 //    openlog("gsb", LOG_PID, LOG_LOCAL7); //(local7.log), на маке все пишет в общий лог
 
 #define MSG_BUFF_SIZE (4096)
-extern std::atomic<bool> Flag;
 
 namespace gsbutils
 {
-
+    std::atomic<bool> Flag{true};
     std::mutex log_mutex;
     std::queue<std::string> msg_queue;
     int debug_level = 1;
 
-    // действует только в дебаговом режиме
     void printMsg()
     {
         while (Flag.load())
