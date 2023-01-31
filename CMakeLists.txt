@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(gsbutils LANGUAGES CXX VERSION 0.6.21)
+project(gsbutils LANGUAGES CXX VERSION 0.6.24)
 
 message(STATUS "${PROJECT_NAME}: ${PROJECT_VERSION}")
 
@@ -13,7 +13,7 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     set(MAIN_PROJECT ON)
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -I. -pthread -std=c++2a -Wno-unused-result -Wno-unused-variable")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -I. -fPIC -pthread -std=c++2a -Wno-unused-result -Wno-unused-variable")
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
@@ -26,12 +26,8 @@ endif()
 
 message(STATUS "${PROJECT_NAME} build type: ${CMAKE_BUILD_TYPE}")
 
-if(${MAIN_PROJECT})
-  message(STATUS "${PROJECT_NAME} main project")
-  configure_file(version.h.in ../version.h)
-else()
-  configure_file(../version.h.in ../../gsb_utils/version.h)
-endif()
+configure_file(version.h.in ../version.h)
+
 
 set(CMAKE_BINARY_DIR bin)
 SET(CMAKE_ARCHIVE_OUTPUT_DIRECTORY lib)
@@ -58,16 +54,42 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(${MAIN_PROJECT})
 
+set(PREFIX /usr/local)
+set(VERSION ${PROJECT_VERSION})
+set(PROJECT_DESCRIPTION "Библиотека утилит")
+
+set(INCLUDE_INSTALL_DIR ${PREFIX}/include/ )
+set(LIB_INSTALL_DIR ${PREFIX}/lib/  )
+set(SYSCONFIG_INSTALL_DIR "" )
+
+
   if(TEST)
     add_executable(test test/example.cpp)
     target_link_libraries(test PUBLIC gsbutils${SUFF})
   else() 
-    add_library(${PROJECT_NAME}${SUFF} STATIC ${SOURCES})
+    add_library(${PROJECT_NAME}${SUFF} SHARED ${SOURCES})
     install(TARGETS ${PROJECT_NAME}${SUFF} DESTINATION  /usr/local/lib)
     set_property(TARGET ${PROJECT_NAME}${SUFF} PROPERTY BUILD_WITH_INSTALL_RPATH TRUE)
 
     install(FILES gsbutils.h debug.h SStrings.h TTimer.h DDate.h
           DESTINATION  /usr/local/include/gsbutils)
+          
+    include(CMakePackageConfigHelpers)
+    configure_package_config_file(${PROJECT_NAME}Config.cmake.in
+              ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+              INSTALL_DESTINATION ${LIB_INSTALL_DIR}/cmake/${PROJECT_NAME}
+              PATH_VARS INCLUDE_INSTALL_DIR 
+              SYSCONFIG_INSTALL_DIR
+              )
+    write_basic_package_version_file(
+              ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+              VERSION ${VERSION}
+              COMPATIBILITY SameMajorVersion )  
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+              ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+              DESTINATION ${LIB_INSTALL_DIR}/cmake/${PROJECT_NAME}) 
+        
+                  
     configure_file(${PROJECT_NAME}.pc.in ${PROJECT_NAME}.pc @ONLY)
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc DESTINATION ${PREFIX}/lib/pkgconfig)
         

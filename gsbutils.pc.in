@@ -7,6 +7,6 @@ Name: @PROJECT_NAME@
 Description: @PROJECT_DESCRIPTION@
 Version: @VERSION@
 Requires: @DEPENDENTS@
-Libs:  -L@PREFIX@/lib -l@PROJECT_NAME@
-Cflags: -I@PREFIX@/include
+Libs:  -L${libdir} -l@PROJECT_NAME@
+Cflags: -I${includedir}
 
