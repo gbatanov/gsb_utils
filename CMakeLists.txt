@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(gsbutils LANGUAGES CXX VERSION 0.6.16)
+project(gsbutils LANGUAGES CXX VERSION 0.6.17)
 
 message(STATUS "${PROJECT_NAME}: ${PROJECT_VERSION}")
 
@@ -41,8 +41,8 @@ endif()
 set(VERSION ${PROJECT_VERSION})
 set(PROJECT_DESCRIPTION "Библиотека утилит")
 
-set(INCLUDE_INSTALL_DIR ${PREFIX}/include/ )
-set(LIB_INSTALL_DIR ${PREFIX}/lib/  )
+set(INCLUDE_INSTALL_DIR ${PREFIX}/include )
+set(LIB_INSTALL_DIR ${PREFIX}/lib  )
 set(SYSCONFIG_INSTALL_DIR "" )
 
 if(TEST)
@@ -55,12 +55,12 @@ install(TARGETS ${PROJECT_NAME} DESTINATION  ${LIB_INSTALL_DIR})
 set_property(TARGET ${PROJECT_NAME} PROPERTY BUILD_WITH_INSTALL_RPATH TRUE)
 
 install(FILES gsbutils.h debug.h SStrings.h TTimer.h DDate.h
-          DESTINATION  /usr/local/include/gsbutils)
+          DESTINATION  ${INCLUDE_INSTALL_DIR}/gsbutils)
           
 include(CMakePackageConfigHelpers)
 configure_package_config_file(${PROJECT_NAME}Config.cmake.in
               ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
-              INSTALL_DESTINATION ${LIB_INSTALL_DIR}cmake/${PROJECT_NAME}
+              INSTALL_DESTINATION ${LIB_INSTALL_DIR}/cmake/${PROJECT_NAME}
               PATH_VARS INCLUDE_INSTALL_DIR 
               SYSCONFIG_INSTALL_DIR
               )
@@ -70,8 +70,8 @@ write_basic_package_version_file(
               COMPATIBILITY SameMajorVersion )  
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
               ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
-              DESTINATION ${LIB_INSTALL_DIR}cmake/${PROJECT_NAME}) 
+              DESTINATION ${LIB_INSTALL_DIR}/cmake/${PROJECT_NAME}) 
         
                   
     configure_file(${PROJECT_NAME}.pc.in ${PROJECT_NAME}.pc @ONLY)
-    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc DESTINATION ${PREFIX}/lib/pkgconfig)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc DESTINATION ${LIB_INSTALL_DIR}/pkgconfig)
