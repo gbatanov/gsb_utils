@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(gsbutils LANGUAGES CXX VERSION 0.6.17)
+project(gsbutils LANGUAGES CXX VERSION 0.6.18)
 
 message(STATUS "${PROJECT_NAME}: ${PROJECT_VERSION}")
 
@@ -22,8 +22,6 @@ set(CMAKE_BINARY_DIR bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY lib)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I/usr/local/include")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}  -L/usr/local/lib ")
 
 list( APPEND SOURCES
   "debug.cpp"
@@ -44,6 +42,9 @@ set(PROJECT_DESCRIPTION "Библиотека утилит")
 set(INCLUDE_INSTALL_DIR ${PREFIX}/include )
 set(LIB_INSTALL_DIR ${PREFIX}/lib  )
 set(SYSCONFIG_INSTALL_DIR "" )
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${INCLUDE_INSTALL_DIR}")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}  -L${LIB_INSTALL_DIR}")
 
 if(TEST)
     add_executable(test test/example.cpp)
