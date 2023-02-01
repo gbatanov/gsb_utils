@@ -28,10 +28,23 @@
 
 namespace gsbutils
 {
-    std::atomic<bool> Flag{true};
+
     std::mutex log_mutex;
     std::queue<std::string> msg_queue;
     int debug_level = 1;
+    std::atomic<bool> Flag{true};
+    int output = 0; // 0 - console, default 1 - syslog
+
+    void set_flag(bool flag)
+    {
+        Flag.store(flag);
+    }
+
+    //  Любое отличное от дефолта значение приводит к выводу в сислог
+    void set_output(int where)
+    {
+        output = where == 0 ? 0 : 1;
+    }
 
     void printMsg()
     {
@@ -79,7 +92,6 @@ namespace gsbutils
         }
     }
 
-    // Отрицательный level выводит в консоль
     void dprintf(int level, std::string fmt, ...)
     {
 
@@ -90,7 +102,7 @@ namespace gsbutils
             char buf1[MSG_BUFF_SIZE - 32]{0};
             size_t len = 0, len1 = 0;
 
-            if (level < 0)
+            if (output == 0)
             {
                 std::time_t t1 = std::time(nullptr); // текущее время timestamp
                 std::tm tm = *std::localtime(&t1);   // structure
@@ -104,7 +116,7 @@ namespace gsbutils
             buf1[len1] = 0;
             va_end(ap);
 
-            if (level < 0)
+            if (output == 0)
             {
                 strncat(buf, buf1, len1);
                 std::lock_guard<std::mutex> lg(log_mutex);
