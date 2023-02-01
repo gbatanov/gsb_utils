@@ -24,23 +24,28 @@
 // а в релизном режиме открывать сислог
 //    openlog("gsb", LOG_PID, LOG_LOCAL7); //(local7.log), на маке все пишет в общий лог
 
-
-
 #define MSG_BUFF_SIZE (4096)
-extern std::atomic<bool> Flag;
 
 namespace gsbutils
 {
 
-    // dprintf(1,....) в рабочем режиме вызывает syslog(1,....)
     std::mutex log_mutex;
     std::queue<std::string> msg_queue;
-#if defined DEBUG
-    unsigned int debug_level = 6;
-#else
-    unsigned int debug_level = 1;
-#endif
-    // действует только в дебаговом режиме
+    int debug_level = 1;
+    std::atomic<bool> Flag{true};
+    int output = 0; // 0 - console, default 1 - syslog
+
+    void set_flag(bool flag)
+    {
+        Flag.store(flag);
+    }
+
+    //  Любое отличное от дефолта значение приводит к выводу в сислог
+    void set_output(int where)
+    {
+        output = where == 0 ? 0 : 1;
+    }
+
     void printMsg()
     {
         while (Flag.load())
@@ -63,14 +68,14 @@ namespace gsbutils
         }
     }
 
-    void set_debug_level(unsigned int level)
+    void set_debug_level(int level)
     {
         debug_level = level;
     }
 
-    void dprintf_c(unsigned int level, std::string fmt, ...)
+    void dprintf_c(int level, std::string fmt, ...)
     {
-#ifdef DEBUG
+
         if (level > LOG_DEBUG)
             level = LOG_DEBUG;
         if (level <= debug_level)
@@ -85,40 +90,40 @@ namespace gsbutils
             std::lock_guard<std::mutex> lg(log_mutex);
             msg_queue.push(std::string(buf));
         }
-
-#endif
     }
 
-    void dprintf(unsigned int level, std::string fmt, ...)
+    void dprintf(int level, std::string fmt, ...)
     {
 
         if (level <= debug_level)
         {
             va_list ap;
-            char buf1[MSG_BUFF_SIZE - 32]{0};
-            size_t len = 0;
-#if defined DEBUG
-
             char buf[MSG_BUFF_SIZE]{0};
-            std::time_t t1 = std::time(nullptr); // текущее время timestamp
-            std::tm tm = *std::localtime(&t1);   // structure
-            len = std::strftime(buf, sizeof(buf), "%Y/%m/%d %H:%M:%S ", &tm);
-            buf[len] = 0;
-#endif
+            char buf1[MSG_BUFF_SIZE - 32]{0};
+            size_t len = 0, len1 = 0;
+
+            if (output == 0)
+            {
+                std::time_t t1 = std::time(nullptr); // текущее время timestamp
+                std::tm tm = *std::localtime(&t1);   // structure
+                len = std::strftime(buf, sizeof(buf), "%Y/%m/%d %H:%M:%S ", &tm);
+                buf[len] = 0;
+            }
             va_start(ap, fmt);
-            len = vsnprintf(buf1, MSG_BUFF_SIZE - 32, fmt.c_str(), ap);
-            if (len == 0)
+            len1 = vsnprintf(buf1, MSG_BUFF_SIZE - 32, fmt.c_str(), ap);
+            if (len1 == 0)
                 return;
-            buf1[len] = 0;
+            buf1[len1] = 0;
             va_end(ap);
 
-#if defined DEBUG
-            strcat(buf, buf1);
-            std::lock_guard<std::mutex> lg(log_mutex);
-            msg_queue.push(std::string(buf));
-#else
-            syslog(level, "%s", buf1);
-#endif
+            if (output == 0)
+            {
+                strncat(buf, buf1, len1);
+                std::lock_guard<std::mutex> lg(log_mutex);
+                msg_queue.push(std::string(buf));
+            }
+            else
+                syslog(level, "%s", buf1);
         }
     }
 }
