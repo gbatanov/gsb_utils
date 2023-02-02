@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(gsbutils LANGUAGES CXX VERSION 0.6.24)
+project(gsbutils LANGUAGES CXX VERSION 0.6.25)
 
 message(STATUS "${PROJECT_NAME}: ${PROJECT_VERSION}")
 
@@ -22,7 +22,11 @@ endif()
 
 message(STATUS "${PROJECT_NAME} build type: ${CMAKE_BUILD_TYPE}")
 
-configure_file(version.h.in ../version.h)
+if(${MAIN_PROJECT})
+    configure_file(version.h.in ../version.h)
+else()
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../version.h.in ${CMAKE_CURRENT_SOURCE_DIR}/version.h)
+endif()
 
 set(CMAKE_BINARY_DIR bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY lib)
@@ -83,7 +87,7 @@ if(${MAIN_PROJECT})
                   
     configure_file(${PROJECT_NAME}.pc.in ${PROJECT_NAME}.pc @ONLY)
     install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc DESTINATION ${LIB_INSTALL_DIR}/pkgconfig)
-    endif()
+    
 else()
       add_library(${PROJECT_NAME}${SUFF} STATIC ${SOURCES})
 endif()
