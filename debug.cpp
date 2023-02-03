@@ -63,7 +63,7 @@ namespace gsbutils
         Flag.store(false);
         if (output)
             closelog();
-        else
+        else if (msgt.joinable())
             msgt.join();
     }
 
@@ -94,6 +94,8 @@ namespace gsbutils
         }
     }
 
+    /// @brief 
+    /// @param level 0 отключает всякий отладочный вывод куда-либо
     void set_debug_level(int level)
     {
         debug_level = level;
