@@ -1,4 +1,4 @@
-#include "version.h"
+
 #include <stdio.h>
 #include <stdarg.h>
 #include <fstream>
@@ -12,6 +12,8 @@
 #include <thread>
 #include <chrono>
 #include <syslog.h>
+
+#include "version.h"
 #include "gsbutils.h"
 #include "debug.h"
 
@@ -24,6 +26,11 @@
 // а в релизном режиме открывать сислог
 //    openlog("gsb", LOG_PID, LOG_LOCAL7); //(local7.log), на маке все пишет в общий лог
 
+// до версии 0.8.27 вся инициализация на стороне вызывающей программы
+// с версии 0.8.27 в вызывающей программе достаточно вызывать gsbutils::init(output),
+// а при завершении программы - gsbutils::stop()
+// output - направление вывода - консоль(0) или сислог (1)
+
 #define MSG_BUFF_SIZE (4096)
 
 namespace gsbutils
@@ -34,16 +41,35 @@ namespace gsbutils
     int debug_level = 1;
     std::atomic<bool> Flag{true};
     int output = 0; // 0 - console, default 1 - syslog
+    std::thread msgt;
+
+    std::string version()
+    {
+        return std::string(Project_VERSION_MAJOR) + "." + Project_VERSION_MINOR + "." + Project_VERSION_PATCH;
+    }
+
+    void init(int output_)
+    {
+        output = output_ == 0 ? 0 : 1;
+        Flag.store(true);
+        if (output)
+            openlog("borstate", LOG_PID, LOG_LOCAL7); //(local7.log)
+        else
+            msgt = std::thread(gsbutils::printMsg);
+    }
+
+    void stop()
+    {
+        Flag.store(false);
+        if (output)
+            closelog();
+        else
+            msgt.join();
+    }
 
     void set_flag(bool flag)
     {
         Flag.store(flag);
-    }
-
-    //  Любое отличное от дефолта значение приводит к выводу в сислог
-    void set_output(int where)
-    {
-        output = where == 0 ? 0 : 1;
     }
 
     void printMsg()

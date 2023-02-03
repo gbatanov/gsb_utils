@@ -3,8 +3,10 @@
 
 #include <string>
 
+void init(int output);
+void stop();
 void set_flag(bool flag);
-void set_output(int where);
+void set_output(int output);
 void dprintf(int level, std::string fmt, ...);
 void printMsg();
 void set_debug_level(int level);
