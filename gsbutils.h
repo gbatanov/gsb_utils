@@ -16,6 +16,8 @@
 #include <atomic>
 #include <condition_variable>
 #include <syslog.h>
+#include <vector>
+
 
 /// @brief Набор полезных мне утилит
 namespace gsbutils

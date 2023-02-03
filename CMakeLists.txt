@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.16)
-project(gsbutils LANGUAGES CXX VERSION 0.6.25)
+cmake_minimum_required(VERSION 3.20)
+project(gsbutils LANGUAGES CXX VERSION 0.7.26)
 
 message(STATUS "${PROJECT_NAME}: ${PROJECT_VERSION}")
 
