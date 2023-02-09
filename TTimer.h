@@ -12,6 +12,8 @@ class TTimer
 public:
     TTimer(uint64_t period, cb_timer cb_func) : period_(period), cb_func_(cb_func)
     {
+        Flag.store(true);
+        active_.store(false);
         if (period > 0)
             periodDefault_ = period;
         init();
@@ -85,36 +87,33 @@ protected:
     {
         t = std::thread([this]()
                         {
-                            while (this->Flag.load())
+                            while (Flag.load())
                             {
                                 std::unique_lock<std::mutex> ul(cv_timer_mutex);
                                 cv_timer.wait(ul, [this]()
-                                              { return this->active_.load() || !this->Flag.load(); });
-
+                                              { return active_.load() || !Flag.load(); });
                                 do
                                 {
-                                    if (!this->Flag.load())
-                                        break;
                                     std::this_thread::sleep_for(std::chrono::seconds(1));
-                                } while (this->dec_period());
-                                if (0 == this->dec_period() && this->Flag.load())
+                                } while (dec_period());
+                                if (0 == dec_period() && Flag.load())
                                 {
-                                    this->active_.store(false);
-                                    this->process_.store(true);
+                                    active_.store(false);
+                                    process_.store(true);
                                     // Исключения в коллбэк-функции перехватываем, чтобы не влияли на сам таймер
                                     try
                                     {
-                                        this->cb_func_();
+                                        cb_func_();
                                     }
                                     catch (...)
                                     {
                                     }
-                                    this->process_.store(false);
+                                    process_.store(false);
                                     ul.unlock();
-                                    if (this->isCycle)
+                                    if (isCycle)
                                     {
-                                        this->period_ = this->periodDefault_;
-                                        this->active_.store(true);
+                                        period_ = this->periodDefault_;
+                                        active_.store(true);
                                         cv_timer.notify_one();
                                     }
                                 }
@@ -125,8 +124,10 @@ protected:
     // Уменьшает счетчик таймера на единицу до достижения нуля.
     uint64_t dec_period()
     {
+        if (!Flag.load())
+            return 0;
         std::lock_guard<std::mutex> lg(period_mtx_);
-        if (period_ > 1)
+        if (period_ > 0)
             return --period_;
         else
             return 0;
