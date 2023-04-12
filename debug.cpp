@@ -48,12 +48,12 @@ namespace gsbutils
         return std::string(Project_VERSION_MAJOR) + "." + Project_VERSION_MINOR + "." + Project_VERSION_PATCH;
     }
 
-    void init(int output_)
+    void init(int output_,const char* name)
     {
         output = output_ == 0 ? 0 : 1;
         Flag.store(true);
         if (output)
-            openlog("borstate", LOG_PID, LOG_LOCAL7); //(local7.log)
+            openlog(name, LOG_PID, LOG_LOCAL7); //(local7.log)
         else
             msgt = std::thread(gsbutils::printMsg);
     }
@@ -88,8 +88,7 @@ namespace gsbutils
             }
             else
             {
-                using namespace std::chrono_literals;
-                std::this_thread::sleep_for(1s);
+                std::this_thread::sleep_for(std::chrono::seconds(2));
             }
         }
     }
