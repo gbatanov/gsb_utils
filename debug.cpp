@@ -12,6 +12,7 @@
 #include <thread>
 #include <chrono>
 #include <syslog.h>
+#include <condition_variable>
 
 #include "version.h"
 #include "gsbutils.h"
@@ -35,8 +36,8 @@
 
 namespace gsbutils
 {
-
-    std::mutex log_mutex;
+    std::condition_variable cv;
+    std::mutex log_mutex, cv_m;
     std::queue<std::string> msg_queue;
     int debug_level = 1;
     std::atomic<bool> Flag{true};
@@ -48,7 +49,7 @@ namespace gsbutils
         return std::string(Project_VERSION_MAJOR) + "." + Project_VERSION_MINOR + "." + Project_VERSION_PATCH;
     }
 
-    void init(int output_,const char* name)
+    void init(int output_, const char *name)
     {
         output = output_ == 0 ? 0 : 1;
         Flag.store(true);
@@ -76,24 +77,35 @@ namespace gsbutils
     {
         while (Flag.load())
         {
-            if (!msg_queue.empty())
+            std::string msg;
+            std::unique_lock<std::mutex> lk(cv_m);
+            while (Flag.load())
             {
-                std::string msg;
+                if (std::cv_status::timeout == cv.wait_for(lk, std::chrono::seconds(2)))
                 {
-                    std::lock_guard<std::mutex> lg(log_mutex);
+                    continue;
+                }
+                else if (!msg_queue.empty())
+                {
+                    break;
+                }
+            }
+
+            lk.unlock();
+            {
+                std::lock_guard<std::mutex> lg(log_mutex);
+                while (!msg_queue.empty())
+                {
                     msg = msg_queue.front();
                     msg_queue.pop();
                     std::cout << msg.c_str();
                 }
-            }
-            else
-            {
-                std::this_thread::sleep_for(std::chrono::seconds(2));
+                std::cout.flush();
             }
         }
     }
 
-    /// @brief 
+    /// @brief
     /// @param level 0 отключает всякий отладочный вывод куда-либо
     void set_debug_level(int level)
     {
@@ -116,6 +128,7 @@ namespace gsbutils
             va_end(ap);
             std::lock_guard<std::mutex> lg(log_mutex);
             msg_queue.push(std::string(buf));
+            cv.notify_one();
         }
     }
 
@@ -148,6 +161,7 @@ namespace gsbutils
                 strncat(buf, buf1, len1);
                 std::lock_guard<std::mutex> lg(log_mutex);
                 msg_queue.push(std::string(buf));
+                cv.notify_one();
             }
             else
                 syslog(level, "%s", buf1);
