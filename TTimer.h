@@ -110,6 +110,7 @@ protected:
                                 {
                                     std::this_thread::sleep_for(std::chrono::seconds(1));
                                 } while (dec_period() && Flag.load());
+
                                 if (0 == dec_period() && Flag.load())
                                 {
                                     active_.store(false);
@@ -126,7 +127,7 @@ protected:
                                     ul.unlock();
                                     if (isCycle && Flag.load())
                                     {
-                                        period_ = this->periodDefault_;
+                                        period_ = periodDefault_;
                                         active_.store(true);
                                         cv_timer.notify_one();
                                     }

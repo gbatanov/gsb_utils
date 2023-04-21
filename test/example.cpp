@@ -11,11 +11,12 @@ void cbfunc()
 }
 void cbfunc2()
 {
-    gsbutils::dprintf_c(1, "Timer2 cycle\n");
+    gsbutils::dprintf(1, "Timer2 cycle\n");
 }
 int main(int argc, char **argv)
 {
     gsbutils::init(0, (const char *)"gsb");
+    gsbutils::set_debug_level(3);
     std::cout << (gsbutils::DDate::current_time()).c_str() << std::endl;
 
     std::string ts1 = "iuyoyoiu";
