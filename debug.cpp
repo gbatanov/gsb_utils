@@ -94,7 +94,7 @@ namespace gsbutils
             lk.unlock();
             {
                 std::lock_guard<std::mutex> lg(log_mutex);
-                while (!msg_queue.empty())
+                while (!msg_queue.empty() && Flag.load())
                 {
                     msg = msg_queue.front();
                     msg_queue.pop();
@@ -114,7 +114,8 @@ namespace gsbutils
 
     void dprintf_c(int level, std::string fmt, ...)
     {
-
+        if (output != 0)
+            return;
         if (level > LOG_DEBUG)
             level = LOG_DEBUG;
         if (level <= debug_level)

@@ -15,9 +15,8 @@ void cbfunc2()
 }
 int main(int argc, char **argv)
 {
-    openlog("zhub2", LOG_PID, LOG_LOCAL7); //(local7.log)
+    gsbutils::init(0, (const char *)"gsb");
     std::cout << (gsbutils::DDate::current_time()).c_str() << std::endl;
-    std::thread msgt = std::thread(&gsbutils::printMsg);
 
     std::string ts1 = "iuyoyoiu";
     std::string ts2 = gsbutils::SString::remove_after(ts1, "oi");
@@ -54,8 +53,6 @@ int main(int argc, char **argv)
     // и вывод циклического таймера каждую секунду
     std::this_thread::sleep_for(std::chrono::seconds(10));
 
-    Flag.store(false);
-    msgt.join();
-    closelog();
+    gsbutils::stop();
     return 0;
 }
