@@ -21,10 +21,12 @@ public:
     }
     ~Channel()
     {
+    }
+    void stop()
+    {
         cv_r.notify_all();
         cv_w.notify_all();
     }
-
     void write(T msg)
     {
         if (Msg_.size() >= size_)
