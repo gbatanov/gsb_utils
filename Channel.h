@@ -48,9 +48,19 @@ public:
         if (Msg_.size() == 0)
         {
             std::unique_lock<std::mutex> ul(mtx_r);
-            cv_r.wait(ul, [this]()
-                      { return stopped || Msg_.size() > 0; });
-            ul.unlock();
+            while (Msg_.size() == 0 && !stopped)
+            {
+                if (std::cv_status::timeout == cv_r.wait_for(ul, std::chrono::milliseconds(100)))
+                {
+                    if (stopped)
+                    {
+                        ul.unlock();
+                        return T{};
+                    }
+                }
+                if (Msg_.size() > 0)
+                    ul.unlock();
+            }
         }
         if (stopped)
             return T{};
