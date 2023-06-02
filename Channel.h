@@ -37,6 +37,8 @@ public:
                       { return stopped || Msg_.size() < size_; });
             ul.unlock();
         }
+        if (stopped)
+            return;
         Msg_.push_back(msg);
         cv_r.notify_one();
     }
@@ -47,9 +49,11 @@ public:
         {
             std::unique_lock<std::mutex> ul(mtx_r);
             cv_r.wait(ul, [this]()
-                      { return stopped ||Msg_.size() > 0; });
+                      { return stopped || Msg_.size() > 0; });
             ul.unlock();
         }
+        if (stopped)
+            return T{};
         T msg = Msg_.front();
         Msg_.erase(Msg_.begin());
         cv_w.notify_one();
