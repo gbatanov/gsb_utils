@@ -26,6 +26,7 @@ namespace gsbutils
 #include "SStrings.h"
 #include "TTimer.h"
 #include "DDate.h"
+#include "Channel.h"
 }
 
 #ifdef DEBUG

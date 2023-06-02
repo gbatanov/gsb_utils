@@ -5,9 +5,12 @@ std::atomic<bool> Flag{true};
 
 typedef void (*tfunc)();
 
+gsbutils::Channel chan(std::string{""}, 1);
+
 void cbfunc()
 {
     INFOLOG("Timer1 done\n");
+    chan.write("chan_msg");
 }
 void cbfunc2()
 {
@@ -15,6 +18,7 @@ void cbfunc2()
 }
 int main(int argc, char **argv)
 {
+
     gsbutils::init(0, (const char *)"gsb");
     gsbutils::set_debug_level(3);
     std::cout << (gsbutils::DDate::current_time()).c_str() << std::endl;
@@ -33,8 +37,12 @@ int main(int argc, char **argv)
 
     gsbutils::dprintf(1, "Час дня: %d \n", gsbutils::DDate::get_hour_of_day());
 
-    gsbutils::TTimer t(5, cbfunc);
+    gsbutils::TTimer t(10, cbfunc);
     t.run();
+    INFOLOG("Timer1 started\n");
+    std::string inMsg = "";
+    //   inMsg = chan.read();
+    printf("after Timer1inMsg %s \n", inMsg.c_str());
     gsbutils::CycleTimer tc(1, cbfunc2);
     tc.run();
 
