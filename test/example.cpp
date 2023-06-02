@@ -1,11 +1,12 @@
-
+#include <memory>
+#include <string>
 #include "../gsbutils.h"
 
 std::atomic<bool> Flag{true};
 
 typedef void (*tfunc)();
-
-gsbutils::Channel chan(std::string{""}, 1);
+//std::shared_ptr<gsbutils::Channel<std::string>> chan;
+gsbutils::Channel<std::string> chan(1);
 
 void cbfunc()
 {
@@ -18,7 +19,7 @@ void cbfunc2()
 }
 int main(int argc, char **argv)
 {
-
+//    chan = std::make_shared<gsbutils::Channel<std::string>>(1);
     gsbutils::init(0, (const char *)"gsb");
     gsbutils::set_debug_level(3);
     std::cout << (gsbutils::DDate::current_time()).c_str() << std::endl;
@@ -41,8 +42,8 @@ int main(int argc, char **argv)
     t.run();
     INFOLOG("Timer1 started\n");
     std::string inMsg = "";
-    //   inMsg = chan.read();
-    printf("after Timer1inMsg %s \n", inMsg.c_str());
+    inMsg = chan.read();
+    INFOLOG("after Timer1 inMsg= %s \n", inMsg.c_str());
     gsbutils::CycleTimer tc(1, cbfunc2);
     tc.run();
 
@@ -60,7 +61,7 @@ int main(int argc, char **argv)
 
     // Делаем паузу, чтобы увидеть срабатывание таймера через 5 секунд
     // и вывод циклического таймера каждую секунду
-    std::this_thread::sleep_for(std::chrono::seconds(10));
+    std::this_thread::sleep_for(std::chrono::seconds(20));
 
     gsbutils::stop();
     return 0;
