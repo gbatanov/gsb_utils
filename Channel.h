@@ -21,6 +21,7 @@ public:
     }
     ~Channel()
     {
+        stopped = true;
     }
     void stop()
     {
@@ -30,11 +31,20 @@ public:
     }
     void write(T msg)
     {
+        if (stopped)
+            return;
+
         if (Msg_.size() >= size_)
         {
             std::unique_lock<std::mutex> ul(mtx_w);
-            cv_w.wait(ul, [this]()
-                      { return stopped || Msg_.size() < size_; });
+            while (Msg_.size() >= size_ && !stopped)
+            {
+                if (std::cv_status::timeout == cv_w.wait_for(ul, std::chrono::milliseconds(100)))
+                {
+                    if (stopped)
+                        break;
+                }
+            }
             ul.unlock();
         }
         if (stopped)
@@ -45,6 +55,9 @@ public:
 
     T read()
     {
+        if (stopped)
+            return T{};
+
         if (Msg_.size() == 0)
         {
             std::unique_lock<std::mutex> ul(mtx_r);
@@ -53,14 +66,10 @@ public:
                 if (std::cv_status::timeout == cv_r.wait_for(ul, std::chrono::milliseconds(100)))
                 {
                     if (stopped)
-                    {
-                        ul.unlock();
-                        return T{};
-                    }
+                        break;
                 }
-                if (Msg_.size() > 0)
-                    ul.unlock();
             }
+            ul.unlock();
         }
         if (stopped)
             return T{};
