@@ -10,13 +10,25 @@ typedef void (*cb_timer)();
 class TTimer
 {
 public:
+    TTimer() = delete;
+    TTimer(TTimer&)  = delete;
+    /// @brief Конструктор таймера
+    /// @param period В секундах
+    /// @param cb_func  Коллбэк-функция, вызываемая при срабатывании таймера
     TTimer(uint64_t period, cb_timer cb_func) : period_(period), cb_func_(cb_func)
     {
+        Flag.store(true);
+        active_.store(false);
         if (period > 0)
             periodDefault_ = period;
         init();
     }
     ~TTimer()
+    {
+        stop();
+    }
+    /// @brief Останавливает все процессы таймера
+    void stop()
     {
         Flag.store(false);
 
@@ -26,11 +38,15 @@ public:
         if (t.joinable())
             t.join();
     }
-
-    // Индикатор состояния - счетчик таймера активен
+    /// Индикатор состояния - счетчик таймера активен
     bool is_active() { return active_.load(); }
-    // Индикатор состояния - выполняется коллбэк-функция или идет отсчет (таймер запущен)
+
+    /// Индикатор состояния - выполняется коллбэк-функция или идет отсчет (таймер запущен)
     bool is_process() { return process_.load() || active_.load(); }
+
+    /// @brief Установка нового периода
+    /// @param period
+    /// @return
     bool set_new_period(uint64_t period)
     {
         std::lock_guard<std::mutex> lg(period_mtx_);
@@ -38,8 +54,8 @@ public:
         return true;
     }
 
-    // Сброс таймера без вызова callback-функции
-    // Если коллбэк-функция уже запущена, функция сброса не сделает ничего.
+    /// Сброс таймера без вызова callback-функции
+    /// Если коллбэк-функция уже запущена, функция сброса не сделает ничего.
     void reset()
     {
         std::lock_guard<std::mutex> lg(period_mtx_);
@@ -47,9 +63,9 @@ public:
         period_ = 0;
     }
 
-    // Запуск таймера с указанным периодом.
-    // Если таймер уже запущен, аналогичен добавлению нового периода к уже исполненному,
-    // если нет - запускает таймер с заданным периодом.
+    /// Запуск таймера с указанным периодом.
+    /// Если таймер уже запущен, аналогичен добавлению нового периода к уже исполненному,
+    /// если нет - запускает таймер с заданным периодом.
     void run(uint64_t period)
     {
         if (is_active())
@@ -65,8 +81,8 @@ public:
         }
     }
 
-    // Запуск таймера c дефолтным периодом.
-    // Повторный запуск при запущенном таймере игнорируется.
+    /// Запуск таймера c дефолтным периодом.
+    /// Повторный запуск при запущенном таймере игнорируется.
     void run()
     {
         if (is_process())
@@ -80,41 +96,39 @@ public:
     }
 
 protected:
-    // Создаю  рабочий поток
+    /// Создаю  рабочий поток
     void init()
     {
         t = std::thread([this]()
                         {
-                            while (this->Flag.load())
+                            while (Flag.load())
                             {
                                 std::unique_lock<std::mutex> ul(cv_timer_mutex);
                                 cv_timer.wait(ul, [this]()
-                                              { return this->active_.load() || !this->Flag.load(); });
-
+                                              { return active_.load() || !Flag.load(); });
                                 do
                                 {
-                                    if (!this->Flag.load())
-                                        break;
                                     std::this_thread::sleep_for(std::chrono::seconds(1));
-                                } while (this->dec_period());
-                                if (0 == this->dec_period() && this->Flag.load())
+                                } while (dec_period() && Flag.load());
+
+                                if (0 == dec_period() && Flag.load())
                                 {
-                                    this->active_.store(false);
-                                    this->process_.store(true);
+                                    active_.store(false);
+                                    process_.store(true);
                                     // Исключения в коллбэк-функции перехватываем, чтобы не влияли на сам таймер
                                     try
                                     {
-                                        this->cb_func_();
+                                        cb_func_();
                                     }
                                     catch (...)
                                     {
                                     }
-                                    this->process_.store(false);
+                                    process_.store(false);
                                     ul.unlock();
-                                    if (this->isCycle)
+                                    if (isCycle && Flag.load())
                                     {
-                                        this->period_ = this->periodDefault_;
-                                        this->active_.store(true);
+                                        period_ = periodDefault_;
+                                        active_.store(true);
                                         cv_timer.notify_one();
                                     }
                                 }
@@ -122,11 +136,13 @@ protected:
                         });
     }
 
-    // Уменьшает счетчик таймера на единицу до достижения нуля.
+    /// Уменьшает счетчик таймера на единицу до достижения нуля.
     uint64_t dec_period()
     {
+        if (!Flag.load())
+            return 0;
         std::lock_guard<std::mutex> lg(period_mtx_);
-        if (period_ > 1)
+        if (period_ > 0)
             return --period_;
         else
             return 0;

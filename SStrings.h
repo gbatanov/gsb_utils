@@ -87,7 +87,6 @@ public:
         std::vector<std::pair<std::string, std::string>> result{};
         while (instring.npos != instring.find(delimiter))
         {
-
             // на каждом шагу работаем с temp
             std::string tmp = remove_after(instring, delimiter);
             instring = remove_before(instring, delimiter);

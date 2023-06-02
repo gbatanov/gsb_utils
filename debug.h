@@ -3,7 +3,7 @@
 
 #include <string>
 
-void init(int output);
+void init(int output, const char* name = (const char*)"gsb");
 void stop();
 void set_flag(bool flag);
 void set_output(int output);

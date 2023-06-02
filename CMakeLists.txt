@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(gsbutils LANGUAGES CXX VERSION 0.8.27)
+project(gsbutils LANGUAGES CXX VERSION 0.10.33)
 
 message(STATUS "${PROJECT_NAME}: ${PROJECT_VERSION}")
 
@@ -9,7 +9,7 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     set(MAIN_PROJECT ON)
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -I. -fPIC -pthread -std=c++2a -Wno-unused-result -Wno-unused-variable")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -I. -pthread  -Wno-unused-result -Wno-unused-variable")
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
@@ -27,11 +27,6 @@ if(${MAIN_PROJECT})
 else()
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../version.h.in ${CMAKE_CURRENT_SOURCE_DIR}/version.h)
 endif()
-
-set(CMAKE_BINARY_DIR bin)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY lib)
-
 
 list( APPEND SOURCES
   "debug.cpp"
