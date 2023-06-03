@@ -55,8 +55,9 @@ public:
 
     T read()
     {
+        T msg{};
         if (stopped)
-            return T{};
+            return msg;
 
         if (Msg_.size() == 0)
         {
@@ -72,10 +73,10 @@ public:
             ul.unlock();
         }
         if (stopped)
-            return T{};
-        T msg = Msg_.front();
+            return msg;
+        msg = Msg_.front();
         Msg_.erase(Msg_.begin());
-        cv_w.notify_one();
+
         return msg;
     }
 
@@ -84,7 +85,7 @@ private:
     uint64_t size_ = 0;
     std::mutex mtx_r, mtx_w;
     std::condition_variable cv_r, cv_w;
-    bool stopped = false;
+    bool stopped = false; // channel closed
 };
 
 #endif

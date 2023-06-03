@@ -1,9 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
-<<<<<<< HEAD
-project(gsbutils LANGUAGES CXX VERSION 0.11.35)
-=======
-project(gsbutils LANGUAGES CXX VERSION 0.11.39)
->>>>>>> master
+project(gsbutils LANGUAGES CXX VERSION 0.11.40)
+
 
 message(STATUS "${PROJECT_NAME}: ${PROJECT_VERSION}")
 
