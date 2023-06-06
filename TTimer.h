@@ -11,7 +11,7 @@ class TTimer
 {
 public:
     TTimer() = delete;
-    TTimer(TTimer&)  = delete;
+    TTimer(TTimer &) = delete;
     /// @brief Конструктор таймера
     /// @param period В секундах
     /// @param cb_func  Коллбэк-функция, вызываемая при срабатывании таймера
@@ -25,7 +25,8 @@ public:
     }
     ~TTimer()
     {
-        stop();
+        if (Flag.load())
+            stop();
     }
     /// @brief Останавливает все процессы таймера
     void stop()
@@ -35,8 +36,8 @@ public:
         cv_timer.notify_all();
         reset();
         cb_func_ = nullptr;
-        if (t.joinable())
-            t.join();
+        if (tmr.joinable())
+            tmr.join();
     }
     /// Индикатор состояния - счетчик таймера активен
     bool is_active() { return active_.load(); }
@@ -50,7 +51,7 @@ public:
     bool set_new_period(uint64_t period)
     {
         std::lock_guard<std::mutex> lg(period_mtx_);
-        period_ = period + 1;
+        period_ = period;
         return true;
     }
 
@@ -75,7 +76,7 @@ public:
         else
         {
             std::lock_guard<std::mutex> lg(period_mtx_);
-            period_ = period + 1;
+            period_ = period;
             active_.store(true);
             cv_timer.notify_one();
         }
@@ -99,41 +100,47 @@ protected:
     /// Создаю  рабочий поток
     void init()
     {
-        t = std::thread([this]()
-                        {
-                            while (Flag.load())
-                            {
-                                std::unique_lock<std::mutex> ul(cv_timer_mutex);
-                                cv_timer.wait(ul, [this]()
-                                              { return active_.load() || !Flag.load(); });
-                                do
-                                {
-                                    std::this_thread::sleep_for(std::chrono::seconds(1));
-                                } while (dec_period() && Flag.load());
+        if (inited)
+            return;
 
-                                if (0 == dec_period() && Flag.load())
-                                {
-                                    active_.store(false);
-                                    process_.store(true);
-                                    // Исключения в коллбэк-функции перехватываем, чтобы не влияли на сам таймер
-                                    try
-                                    {
-                                        cb_func_();
-                                    }
-                                    catch (...)
-                                    {
-                                    }
-                                    process_.store(false);
-                                    ul.unlock();
-                                    if (isCycle && Flag.load())
-                                    {
-                                        period_ = periodDefault_;
-                                        active_.store(true);
-                                        cv_timer.notify_one();
-                                    }
-                                }
-                            } // while Flag
-                        });
+        inited = true;
+
+        tmr = std::thread(&TTimer::process, this);
+    }
+
+    void process()
+    {
+        while (Flag.load())
+        {
+            std::unique_lock<std::mutex> ul(cv_timer_mutex);
+            cv_timer.wait(ul, [this]()
+                          { return active_.load() || !Flag.load(); });
+            while (dec_period() && Flag.load())
+            {
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+            }
+            if (0 == dec_period() && Flag.load())
+            {
+                active_.store(false);
+                process_.store(true);
+                // Исключения в коллбэк-функции перехватываем, чтобы не влияли на сам таймер
+                try
+                {
+                    cb_func_();
+                }
+                catch (...)
+                {
+                }
+                process_.store(false);
+                ul.unlock();
+                if (isCycle && Flag.load())
+                {
+                    period_ = periodDefault_;
+                    active_.store(true);
+                    cv_timer.notify_one();
+                }
+            }
+        } // while Flag
     }
 
     /// Уменьшает счетчик таймера на единицу до достижения нуля.
@@ -143,7 +150,10 @@ protected:
             return 0;
         std::lock_guard<std::mutex> lg(period_mtx_);
         if (period_ > 0)
-            return --period_;
+        {
+            uint64_t ret = period_--;
+            return ret;
+        }
         else
             return 0;
     }
@@ -154,11 +164,12 @@ protected:
     std::mutex period_mtx_;             // Мьютекс на изменения периода
     std::atomic<bool> active_{false};   // Состояние процесса изменения периода
     std::atomic<bool> process_{false};  // Состояние процесса выполнения коллбэк-функции
-    std::thread t;                      // Рабочие потоки
+    std::thread tmr;                    // Рабочие потоки
     std::condition_variable cv_timer{}; // Условная переменная для таймера
     std::mutex cv_timer_mutex{};        // Мьютекс на условную переменную для таймера
     std::atomic<bool> Flag{true};       // Флаг разрешения работы внутренним потокам
     bool isCycle{false};                // Признак циклического самозапуска
+    bool inited = false;
 };
 
 class CycleTimer : public TTimer
