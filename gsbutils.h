@@ -17,7 +17,7 @@
 #include <condition_variable>
 #include <syslog.h>
 #include <vector>
-
+#include <queue>
 
 /// @brief Набор полезных мне утилит
 namespace gsbutils
@@ -27,6 +27,7 @@ namespace gsbutils
 #include "TTimer.h"
 #include "DDate.h"
 #include "Channel.h"
+#include "thread_pool.h"
 }
 
 #ifdef DEBUG
