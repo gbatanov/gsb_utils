@@ -42,6 +42,8 @@ int main(int argc, char **argv)
     t.run();
     INFOLOG("Timer1 started\n");
     std::string inMsg = "";
+
+    // Здесь будет задержка на 10 секунд, пока коллбэк функция таймера не запишет в канал
     inMsg = chan.read();
     INFOLOG("after Timer1 inMsg= %s \n", inMsg.c_str());
     gsbutils::CycleTimer tc(1, cbfunc2);
@@ -58,8 +60,8 @@ int main(int argc, char **argv)
         else
             printf("%s=%s \n", it.first.c_str(), it.second.c_str());
     }
-
-    // Делаем паузу, чтобы увидеть срабатывание таймера через 5 секунд
+   t.run();
+    // Делаем паузу, чтобы увидеть срабатывание таймера через 10 секунд
     // и вывод циклического таймера каждую секунду
     std::this_thread::sleep_for(std::chrono::seconds(20));
 
