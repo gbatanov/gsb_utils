@@ -1,8 +1,6 @@
 #ifndef THREAD_POOL_GSB
 #define THREAD_POOL_GSB
 
-
-
 typedef void (*thread_func)(void *);
 
 template <class T>
@@ -38,12 +36,9 @@ public:
     // добавление команды в очередь
     void add_command(T cmd)
     {
-        if (cmd.uid() != 0)
-        {
             std::lock_guard<std::mutex> lg(tqMtx);
             taskQueue.push(cmd);
             cv_queue.notify_all();
-        }
     }
     std::atomic<bool> flag{true};
 
