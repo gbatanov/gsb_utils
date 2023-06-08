@@ -18,10 +18,10 @@ public:
             stop_threads();
     }
 
-    void init_threads(thread_func handle)
+    void init_threads(thread_func handle, uint8_t count)
     {
         handle_ = handle;
-        uint8_t tc = std::max((uint8_t)std::thread::hardware_concurrency(), (uint8_t)8);
+        uint8_t tc = count;
         threadVec.reserve(tc);
         while (tc--)
             threadVec.push_back(new std::thread(&ThreadPool::on_command, this));
