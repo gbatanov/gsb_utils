@@ -36,6 +36,10 @@ int main(int argc, char **argv)
     gsbutils::SString::remove_all(ts6, "yo");
     printf("%s  %s %s %s\n", ts1.c_str(), ts4.c_str(), ts5.c_str(), ts6.c_str());
 
+    std::string primTrim = "\t   test string trim  \r";
+    std::string afterTrim = gsbutils::SString::trim(primTrim);
+     gsbutils::dprintf(1,"%s\n",afterTrim.c_str());
+
     gsbutils::dprintf(1, "Час дня: %d \n", gsbutils::DDate::get_hour_of_day());
 
     gsbutils::TTimer t(10, cbfunc);
