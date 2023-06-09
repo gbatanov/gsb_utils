@@ -140,10 +140,30 @@ public:
         return line;
     }
 
+    /// @brief Обрезка строки слева и справа
+    /// @param instring Входная строка
+    /// @return Результирующая строка
     static inline std::string trim(std::string instring)
     {
         std::string line = ltrim(instring);
         return rtrim(line);
+    }
+
+    static inline std::vector<std::string> split(std::string instring, std::string delimiter)
+    {
+        std::vector<std::string> result{};
+        while (instring.npos != instring.find(delimiter))
+        {
+            // на каждом шагу работаем с temp
+            std::string tmp = remove_after(instring, delimiter);
+            instring = remove_before(instring, delimiter);
+            result.push_back(tmp);
+        }
+        if (instring.size())
+        {
+            result.push_back(instring);
+        }
+        return result;
     }
     static void hexchar(unsigned char c, unsigned char &hex1, unsigned char &hex2)
     {

@@ -5,7 +5,7 @@
 std::atomic<bool> Flag{true};
 
 typedef void (*tfunc)();
-//std::shared_ptr<gsbutils::Channel<std::string>> chan;
+// std::shared_ptr<gsbutils::Channel<std::string>> chan;
 gsbutils::Channel<std::string> chan(1);
 
 void cbfunc()
@@ -19,7 +19,7 @@ void cbfunc2()
 }
 int main(int argc, char **argv)
 {
-//    chan = std::make_shared<gsbutils::Channel<std::string>>(1);
+    //    chan = std::make_shared<gsbutils::Channel<std::string>>(1);
     gsbutils::init(0, (const char *)"gsb");
     gsbutils::set_debug_level(3);
     std::cout << (gsbutils::DDate::current_time()).c_str() << std::endl;
@@ -38,7 +38,14 @@ int main(int argc, char **argv)
 
     std::string primTrim = "\t   test string trim  \r";
     std::string afterTrim = gsbutils::SString::trim(primTrim);
-     gsbutils::dprintf(1,"%s\n",afterTrim.c_str());
+    gsbutils::dprintf(1, "%s\n", afterTrim.c_str());
+
+    std::string splitString = "eeg, egrwe,etwettut";
+    std::vector<std::string> splittedString = gsbutils::SString::split(splitString, ",");
+
+    for (auto & str : splittedString){
+        gsbutils::dprintf(1, "%s\n", str.c_str());
+    }
 
     gsbutils::dprintf(1, "Час дня: %d \n", gsbutils::DDate::get_hour_of_day());
 
@@ -64,7 +71,7 @@ int main(int argc, char **argv)
         else
             printf("%s=%s \n", it.first.c_str(), it.second.c_str());
     }
-   t.run();
+    t.run();
     // Делаем паузу, чтобы увидеть срабатывание таймера через 10 секунд
     // и вывод циклического таймера каждую секунду
     std::this_thread::sleep_for(std::chrono::seconds(20));
