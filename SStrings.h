@@ -116,7 +116,35 @@ public:
 
         return result;
     }
+    /// @brief Обрезка строки слева
+    /// @param instring Входная строка
+    /// @return Результирующая строка
+    static inline std::string ltrim(std::string instring)
+    {
+        std::string line = instring;
+        line.erase(line.begin(), std::find_if(line.begin(), line.end(), [](unsigned char ch)
+                                              { return !std::isspace(ch); }));
+        return line;
+    }
 
+    /// @brief Обрезка строки справа
+    /// @param instring Входная строка
+    /// @return Результирующая строка
+    static inline std::string rtrim(std::string instring)
+    {
+        std::string line = instring;
+        line.erase(std::find_if(line.rbegin(), line.rend(), [](unsigned char ch)
+                                { return !std::isspace(ch); })
+                       .base(),
+                   line.end());
+        return line;
+    }
+
+    static inline std::string trim(std::string instring)
+    {
+        std::string line = ltrim(instring);
+        return rtrim(line);
+    }
     static void hexchar(unsigned char c, unsigned char &hex1, unsigned char &hex2)
     {
         hex1 = c / 16;

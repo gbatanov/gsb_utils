@@ -18,6 +18,7 @@
 #include <syslog.h>
 #include <vector>
 #include <queue>
+#include <algorithm>
 
 /// @brief Набор полезных мне утилит
 namespace gsbutils
