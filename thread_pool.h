@@ -44,7 +44,7 @@ public:
     // получение команды из очереди
     T get_command()
     {
-        T cmd;
+        T cmd{};
         {
             std::lock_guard<std::mutex> lg(tqMtx);
             if (!taskQueue.empty())
