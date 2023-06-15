@@ -22,7 +22,8 @@ public:
     }
     ~Channel()
     {
-        stopped.store(true);
+        if (!stopped)
+            stop();
     }
     void stop()
     {
@@ -58,7 +59,7 @@ public:
     T read()
     {
         T msg{};
- 
+
         if (Msg_.size() == 0)
         {
             std::unique_lock<std::mutex> ul(mtxR);
