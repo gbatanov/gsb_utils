@@ -36,11 +36,10 @@ public:
     // добавление команды в очередь
     void add_command(T cmd)
     {
-            std::lock_guard<std::mutex> lg(tqMtx);
-            taskQueue.push(cmd);
-            cv_queue.notify_all();
+        std::lock_guard<std::mutex> lg(tqMtx);
+        taskQueue.push(cmd);
+        cv_queue.notify_all();
     }
-    std::atomic<bool> flag{true};
 
     // получение команды из очереди
     T get_command()
@@ -69,37 +68,25 @@ public:
         return cmd;
     }
 
+    std::atomic<bool> flag{true}; // флаг разрешения работы потоков
+
 protected:
     std::vector<std::thread *> threadVec{}; // вектор указателей на поток
     std::queue<T> taskQueue{};              // очередь команд
     std::mutex tqMtx{};                     // мьютех на запись/чтение очереди комманд
     std::condition_variable cv_queue;       // cv на очередь команд
 private:
-    thread_func handle_;
+    /// @brief Функция потока
     void on_command()
     {
         while (flag.load())
         {
             T cmd = get_command();
             if (flag.load())
-                handle_((void *)&cmd);
+                handle_((void *)&cmd); // вызов функции-обработчика
         }
     }
-
-#ifdef TEST
-    // Возвращаю 4 последних цифры ID потока
-    unsigned long long get_thread_id()
-    {
-#ifdef __MACH__
-        return (unsigned long long)1;
-#else
-        std::stringstream ss;
-        ss << std::this_thread::get_id();
-        std::string id_str = ss.str();
-        return std::stoull(id_str.substr(id_str.size() - 4));
-#endif
-    }
-#endif
+    thread_func handle_; // реальная функция-обработчик команды
 };
 
 #endif
