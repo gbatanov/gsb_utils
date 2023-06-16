@@ -9,7 +9,7 @@ on:
 
 env:
   BUILD_TYPE: Debug
-  TEST: on
+  TEST: off
 
 jobs:
   # job name "build"
@@ -27,6 +27,13 @@ jobs:
     - name: Build
       # Build program with the given configuration
       run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+
+#    - name: SaveTest
+#      if: env.TEST == 'on'
+#      uses: actions/cache@v3
+#      with:
+#        path: "${{github.workspace}}/build"
+#       key: test
 
     - name: Test
       if: env.TEST == 'on'
