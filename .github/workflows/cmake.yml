@@ -7,36 +7,47 @@ on:
   workflow_dispatch:
   
 
-env:
-  BUILD_TYPE: Debug
-  TEST: off
 
 jobs:
-  # job name "build"
-  build:
+  # job name "build-debug"
+  build-debug:
+
+    env:
+      BUILD_TYPE: Debug
+      TEST: on    
     
     #version of ubuntu linux runner
     runs-on: ubuntu-22.04
 
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Configure CMake
-      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DTEST=${{env.TEST}}
+      - name: Configure CMake
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DTEST=${{env.TEST}}
 
-    - name: Build
-      # Build program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+      - name: Build
+        # Build program with the given configuration
+        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
 
-#    - name: SaveTest
-#      if: env.TEST == 'on'
-#      uses: actions/cache@v3
-#      with:
-#        path: "${{github.workspace}}/build"
-#       key: test
+      - name: Test
+        if: env.TEST == 'on'
+        working-directory: ${{github.workspace}}/build       
+        run: ./test 
 
-    - name: Test
-      if: env.TEST == 'on'
-      working-directory: ${{github.workspace}}/build       
-      run: ./test 
+  build-release:
+    needs: build-debug
+    env:
+      BUILD_TYPE: Release
 
+    #version of ubuntu linux runner
+    runs-on: ubuntu-22.04
+    
+    steps:
+      - uses: actions/checkout@v3
+    
+      - name: Configure CMake
+        run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} 
+    
+      - name: Build
+        run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}  
+    
