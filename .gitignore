@@ -1,3 +1,4 @@
 build/
 version.h
 .DS_Store
+actions-runner
