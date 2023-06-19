@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(gsbutils LANGUAGES CXX VERSION 0.13.50)
+project(gsbutils LANGUAGES CXX VERSION 0.13.51)
 
 message(STATUS "${PROJECT_NAME}: ${PROJECT_VERSION}")
 
@@ -61,7 +61,7 @@ if(${MAIN_PROJECT})
     install(TARGETS ${PROJECT_NAME} DESTINATION  ${LIB_INSTALL_DIR})
     set_property(TARGET ${PROJECT_NAME} PROPERTY BUILD_WITH_INSTALL_RPATH TRUE)
 
-    install(FILES gsbutils.h debug.h SStrings.h TTimer.h DDate.h Channel.h version.h
+    install(FILES gsbutils.h debug.h SStrings.h TTimer.h DDate.h Channel.h version.h thread_pool.h
           DESTINATION  ${INCLUDE_INSTALL_DIR}/gsbutils)
           
     include(CMakePackageConfigHelpers)
