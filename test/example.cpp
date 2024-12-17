@@ -8,14 +8,14 @@ typedef void (*tfunc)();
 // std::shared_ptr<gsbutils::Channel<std::string>> chan;
 gsbutils::Channel<std::string> chan(1);
 
-void cbfunc()
+static void cbfunc()
 {
-    INFOLOG("Timer1 done\n");
+    INFOLOG("Timer1 done\n","");
     chan.write("chan_msg");
 }
-void cbfunc2()
+static void cbfunc2()
 {
-    gsbutils::dprintf(1, "Timer2 cycle\n");
+   gsbutils::dprintf(1, "Timer2 cycle\n","");
 }
 int main(int argc, char **argv)
 {
@@ -51,7 +51,7 @@ int main(int argc, char **argv)
 
     gsbutils::TTimer t(10, cbfunc);
     t.run();
-    INFOLOG("Timer1 started\n");
+    INFOLOG("Timer1 started\n","");
     std::string inMsg = "";
 
     // Здесь будет задержка на 10 секунд, пока коллбэк функция таймера не запишет в канал

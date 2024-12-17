@@ -167,8 +167,8 @@ public:
     }
     static void hexchar(unsigned char c, unsigned char &hex1, unsigned char &hex2)
     {
-        hex1 = c / 16;
-        hex2 = c % 16;
+        hex1 = c / (unsigned char)16;
+        hex2 = c % (unsigned char)16;
         hex1 += hex1 <= 9 ? '0' : 'a' - 10;
         hex2 += hex2 <= 9 ? '0' : 'a' - 10;
     }
@@ -199,7 +199,7 @@ public:
             {
                 v.push_back('%');
                 unsigned char d1, d2;
-                hexchar(c, d1, d2);
+                hexchar((unsigned char)c, d1, d2);
                 v.push_back(d1);
                 v.push_back(d2);
             }
