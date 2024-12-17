@@ -55,7 +55,7 @@ int main(int argc, char **argv)
     std::string inMsg = "";
 
     // Здесь будет задержка на 10 секунд, пока коллбэк функция таймера не запишет в канал
-    inMsg = chan.read();
+    inMsg = chan.read(NULL);
     INFOLOG("after Timer1 inMsg= %s \n", inMsg.c_str());
     gsbutils::CycleTimer tc(1, cbfunc2);
     tc.run();

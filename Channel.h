@@ -12,82 +12,97 @@ template <class T>
 class Channel
 {
 public:
-    Channel() = delete;
-    Channel(Channel &) = delete;
-    Channel(uint64_t size)
-    {
-        size_ = size;
-        Msg_.reserve(size);
-        stopped.store(false);
-    }
-    ~Channel()
-    {
-        if (!stopped)
-            stop();
-    }
-    void stop()
-    {
-        stopped.store(true);
-        cv_r.notify_all();
-        cv_w.notify_all();
-    }
-    void write(T msg)
-    {
-        if (Msg_.size() >= size_)
-        {
-            std::unique_lock<std::mutex> ul(mtxW);
+	Channel() = delete;
+	Channel(Channel&) = delete;
+	Channel(uint64_t size)
+	{
+		size_ = size;
+		Msg_.reserve(size);
+		stopped.store(false);
+	}
+	~Channel()
+	{
+		if (!stopped)
+			stop();
+	}
+	void stop()
+	{
+		stopped.store(true);
+		cv_r.notify_all();
+		cv_w.notify_all();
+	}
+	bool is_stopped() {
+		return stopped;
+	}
+	void write(T msg)
+	{
+		if (Msg_.size() >= size_)
+		{
+			std::unique_lock<std::mutex> ul(mtxW);
 
-            while (Msg_.size() >= size_ && !stopped.load())
-            {
-                if (std::cv_status::timeout == cv_w.wait_for(ul, std::chrono::milliseconds(200)))
-                {
-                    if (stopped.load())
-                        break;
-                }
-            }
+			while (Msg_.size() >= size_ && !stopped.load())
+			{
+				if (std::cv_status::timeout == cv_w.wait_for(ul, std::chrono::milliseconds(200)))
+				{
+					if (stopped.load())
+						break;
+				}
+			}
 
-            ul.unlock();
-        }
-        if (!stopped.load())
-        {
-            std::lock_guard<std::mutex> lg(mtxMsg);
-            Msg_.push_back(msg);
-        }
-        cv_r.notify_all();
-    }
+			ul.unlock();
+		}
+		if (!stopped.load())
+		{
+			std::lock_guard<std::mutex> lg(mtxMsg);
+			Msg_.push_back(msg);
+		}
+		cv_r.notify_all();
+	}
 
-    T read()
-    {
-        T msg{};
+	T read(bool* ok)
+	{
+		T msg{};
 
-        if (Msg_.size() == 0)
-        {
-            std::unique_lock<std::mutex> ul(mtxR);
-            while (Msg_.size() == 0 && !stopped.load())
-            {
-                if (std::cv_status::timeout == cv_r.wait_for(ul, std::chrono::milliseconds(200)))
-                {
-                    if (stopped.load())
-                        break;
-                }
-            }
-            ul.unlock();
-        }
-        if (!stopped.load())
-        {
-            std::lock_guard<std::mutex> lg(mtxMsg);
-            msg = Msg_.front();
-            Msg_.erase(Msg_.begin());
-        }
-        return msg;
-    }
+		if (Msg_.size() == 0)
+		{
+			std::unique_lock<std::mutex> ul(mtxR);
+			while (Msg_.size() == 0 && !stopped.load())
+			{
+				if (std::cv_status::timeout == cv_r.wait_for(ul, std::chrono::milliseconds(200)))
+				{
+					if (stopped.load())
+						break;
+				}
+			}
+			ul.unlock();
+			if (!stopped.load())
+			{
+				std::lock_guard<std::mutex> lg(mtxR);
+				if (Msg_.size() > 0) {
+					msg = Msg_.front();
+					Msg_.erase(Msg_.begin());
+					return msg;
+				}
+			}
+
+		}
+		else {
+			std::lock_guard<std::mutex> lg(mtxR);
+			msg = Msg_.front();
+			Msg_.erase(Msg_.begin());
+		}
+		
+		if (ok != nullptr)
+			*ok = !stopped.load();
+		return msg;
+	}
 
 private:
-    std::vector<T> Msg_{};
-    uint64_t size_ = 0;
-    std::mutex mtxR, mtxW, mtxMsg;
-    std::condition_variable cv_r, cv_w;
-    std::atomic<bool> stopped; // channel closed
+	std::vector<T> Msg_{};
+	uint64_t size_ = 0;
+	std::mutex mtxR, mtxW, mtxMsg;
+	std::condition_variable cv_r, cv_w;
+	std::atomic<bool> stopped; // channel closed
 };
 
 #endif
