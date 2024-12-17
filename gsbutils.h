@@ -15,7 +15,9 @@
 #include <mutex>
 #include <atomic>
 #include <condition_variable>
+#ifndef Win32
 #include <syslog.h>
+#endif
 #include <vector>
 #include <queue>
 #include <algorithm>
@@ -31,6 +33,17 @@ namespace gsbutils
 #include "thread_pool.h"
 }
 
+#ifdef Win32
+#ifdef DEBUG
+#define ERRLOG(fmt, args) gsbutils::dprintf(1, "[ERROR][%s:%d]" fmt, __func__, __LINE__, ##args)
+#define DBGLOG(fmt, args) gsbutils::dprintf(3, "[DEBUG][%s:%d]" fmt, __func__, __LINE__, ##args)
+#define INFOLOG(fmt, args) gsbutils::dprintf(2, "[Info]" fmt, ##args)
+#else
+#define ERRLOG(fmt, args...) gsbutils::dprintf(1, "[ERROR]" fmt, ##args)
+#define INFOLOG(fmt, args...) gsbutils::dprintf(2, "[Info]" fmt, ##args)
+#define DBGLOG(x, ...)
+#endif
+#else
 #ifdef DEBUG
 #define ERRLOG(fmt, args...) gsbutils::dprintf(1, "[ERROR][%s:%d]" fmt, __func__, __LINE__, ##args)
 #define DBGLOG(fmt, args...) gsbutils::dprintf(3, "[DEBUG][%s:%d]" fmt, __func__, __LINE__, ##args)
@@ -39,6 +52,8 @@ namespace gsbutils
 #define ERRLOG(fmt, args...) gsbutils::dprintf(1, "[ERROR]" fmt, ##args)
 #define INFOLOG(fmt, args...) gsbutils::dprintf(2, "[Info]" fmt, ##args)
 #define DBGLOG(x, ...)
+#endif
+
 #endif
 
 #endif

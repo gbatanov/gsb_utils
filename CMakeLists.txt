@@ -1,5 +1,11 @@
 cmake_minimum_required(VERSION 3.20)
-project(gsbutils LANGUAGES CXX VERSION 0.13.51)
+project(gsbutils LANGUAGES CXX VERSION 0.13.52)
+
+# Включение горячей перезагрузки для компиляторов MSVC, если поддерживается.
+if (POLICY CMP0141)
+  cmake_policy(SET CMP0141 NEW)
+  set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
+endif()
 
 message(STATUS "${PROJECT_NAME}: ${PROJECT_VERSION}")
 
@@ -9,7 +15,13 @@ if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     set(MAIN_PROJECT ON)
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -I. -pthread  -Wno-unused-result -Wno-unused-variable")
+if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -I. -DWin32=1")
+    set(TEST "test")
+else()
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -I. -pthread  -Wno-unused-result -Wno-unused-variable")
+endif()
+
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2")
@@ -22,10 +34,14 @@ endif()
 
 message(STATUS "${PROJECT_NAME} build type: ${CMAKE_BUILD_TYPE}")
 
+if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
+configure_file(version.h.in ../../../version.h)
+else()
 if(${MAIN_PROJECT})
     configure_file(version.h.in ../version.h)
 else()
     configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../version.h.in ${CMAKE_CURRENT_SOURCE_DIR}/version.h)
+endif()
 endif()
 
 list( APPEND SOURCES
@@ -41,6 +57,9 @@ if(${MAIN_PROJECT})
     if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
         set(PREFIX /opt/local)
     endif()
+    if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
+        set(PREFIX ./)
+    endif()
 
     set(VERSION ${PROJECT_VERSION})
     set(PROJECT_DESCRIPTION "Библиотека утилит")
@@ -55,9 +74,11 @@ if(${MAIN_PROJECT})
     if(TEST)
         add_executable(test test/example.cpp)
         target_link_libraries(test PUBLIC gsbutils)
+         add_library(${PROJECT_NAME} STATIC ${SOURCES} "version.h")
+    else()
+        add_library(${PROJECT_NAME} SHARED ${SOURCES} "version.h")
     endif() 
 
-    add_library(${PROJECT_NAME} SHARED ${SOURCES})
     install(TARGETS ${PROJECT_NAME} DESTINATION  ${LIB_INSTALL_DIR})
     set_property(TARGET ${PROJECT_NAME} PROPERTY BUILD_WITH_INSTALL_RPATH TRUE)
 
