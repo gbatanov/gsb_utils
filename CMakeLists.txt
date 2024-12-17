@@ -107,3 +107,4 @@ if(${MAIN_PROJECT})
 else()
       add_library(${PROJECT_NAME}${SUFF} STATIC ${SOURCES})
 endif()
+

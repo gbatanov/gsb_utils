@@ -1,5 +1,5 @@
 {
-    "version": 3,
+  "version": 3,
   "configurePresets": [
     {
       "name": "windows-base",
@@ -77,24 +77,24 @@
       }
     }
   ],
-    "buildPresets": [
-        {
-            "name": "ReleaseBuildPresetComp",
-            "description": "",
-            "displayName": "ReleaseBuildPresetComp",
-            "configurePreset": "ReleaseComp"
-        },
-        {
-            "name": "DebugBuildPresetComp",
-            "description": "",
-            "displayName": "DebugBuildPresetComp",
-            "configurePreset": "DebugComp"
-        },
-        {
-            "name": "TestBuildPresetComp",
-            "description": "",
-            "displayName": "TestBuildPresetComp",
-            "configurePreset": "TestComp"
-        }
-    ]
+  "buildPresets": [
+    {
+      "name": "ReleaseBuildPresetComp",
+      "description": "",
+      "displayName": "ReleaseBuildPresetComp",
+      "configurePreset": "ReleaseComp"
+    },
+    {
+      "name": "DebugBuildPresetComp",
+      "description": "",
+      "displayName": "DebugBuildPresetComp",
+      "configurePreset": "DebugComp"
+    },
+    {
+      "name": "TestBuildPresetComp",
+      "description": "",
+      "displayName": "TestBuildPresetComp",
+      "configurePreset": "TestComp"
+    }
+  ]
 }
