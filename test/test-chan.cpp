@@ -6,7 +6,7 @@
 #include <Channel.h>
 
 using namespace std;
-Channel<std::string> chan(1);
+Channel<std::string> chan(2);
 
 static void thread1() {
 	for (int i = 0; i < 20; i++) {

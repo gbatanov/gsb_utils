@@ -1,6 +1,8 @@
 #ifndef THREAD_POOL_GSB
 #define THREAD_POOL_GSB
 
+// Пул потоков для проекта Zhub2
+
 typedef void (*thread_func)(void *);
 
 template <class T>

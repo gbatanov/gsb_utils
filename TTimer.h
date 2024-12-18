@@ -12,6 +12,7 @@ class TTimer
 public:
     TTimer() = delete;
     TTimer(TTimer &) = delete;
+
     /// @brief Конструктор таймера
     /// @param period В секундах
     /// @param cb_func  Коллбэк-функция, вызываемая при срабатывании таймера
@@ -28,6 +29,7 @@ public:
         if (Flag.load())
             stop();
     }
+
     /// @brief Останавливает все процессы таймера
     void stop()
     {
@@ -39,6 +41,7 @@ public:
         if (tmr.joinable())
             tmr.join();
     }
+
     /// Индикатор состояния - счетчик таймера активен
     bool is_active() { return active_.load(); }
 
@@ -124,6 +127,7 @@ protected:
                 active_.store(false);
                 process_.store(true);
                 // Исключения в коллбэк-функции перехватываем, чтобы не влияли на сам таймер
+                // коллбэк-функция должна быть максимально короткой, если таймер работает циклически
                 try
                 {
                     cb_func_();

@@ -34,8 +34,11 @@ public:
 	bool is_stopped() {
 		return stopped;
 	}
+
+	// «апись в канал
 	void write(T msg)
 	{
+		// ≈сли очередь заполнена, ждем освобождени€ как минимум одного элемента.
 		if (Msg_.size() >= size_)
 		{
 			std::unique_lock<std::mutex> ul(mtxW);
@@ -56,9 +59,10 @@ public:
 			std::lock_guard<std::mutex> lg(mtxMsg);
 			Msg_.push_back(msg);
 		}
-		cv_r.notify_all();
+		cv_r.notify_all(); // уведомл€ем все потоки, ожидающие возможности прочитать из канала
 	}
 
+	// „тение из канала
 	T read(bool* ok)
 	{
 		T msg{};
@@ -75,26 +79,24 @@ public:
 				}
 			}
 			ul.unlock();
-			if (!stopped.load())
-			{
-				std::lock_guard<std::mutex> lg(mtxR);
-				if (Msg_.size() > 0) {
-					msg = Msg_.front();
-					Msg_.erase(Msg_.begin());
-					return msg;
-				}
+		}
+		if (!stopped.load())
+		{
+			std::lock_guard<std::mutex> lg(mtxR);
+			if (Msg_.size() > 0) {
+				msg = Msg_.front();
+				Msg_.erase(Msg_.begin());
+				if (ok != nullptr)
+					*ok = true;
+				return msg;
 			}
-
 		}
 		else {
-			std::lock_guard<std::mutex> lg(mtxR);
-			msg = Msg_.front();
-			Msg_.erase(Msg_.begin());
+			if (ok != nullptr)
+				*ok = false;
+			msg = T{};
+			return msg;
 		}
-		
-		if (ok != nullptr)
-			*ok = !stopped.load();
-		return msg;
 	}
 
 private:
