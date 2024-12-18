@@ -1,11 +1,11 @@
 #include <memory>
 #include <string>
-#include "../gsbutils.h"
+#include <gsbutils.h>
 
 std::atomic<bool> Flag{true};
 
 typedef void (*tfunc)();
-// std::shared_ptr<gsbutils::Channel<std::string>> chan;
+
 gsbutils::Channel<std::string> chan(1);
 
 static void cbfunc()
