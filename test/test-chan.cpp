@@ -23,7 +23,10 @@ static void thread2() {
 		std::string str = chan.read(&ok);
 		if (!ok)
 			break;
-		std::cout << std::format("Result2: {}\n", str);
+		std::string str2 = chan.read(&ok);
+		if (!ok)
+			break;
+		std::cout << std::format("Result2: {} {}\n", str,str2);
 		this_thread::sleep_for(1200ms);
 	}
 }

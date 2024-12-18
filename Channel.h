@@ -6,7 +6,7 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
-#include "version.h"
+
 
 template <class T>
 class Channel
@@ -17,7 +17,7 @@ public:
 	Channel(uint64_t size)
 	{
 		size_ = size;
-		Msg_.reserve(size);
+		Msg_.reserve(size+1);
 		stopped.store(false);
 	}
 	~Channel()
@@ -39,11 +39,11 @@ public:
 	void write(T msg)
 	{
 		// Если очередь заполнена, ждем освобождения как минимум одного элемента.
-		if (Msg_.size() >= size_)
+		if (Msg_.size() !=0 && Msg_.size() >= size_)
 		{
 			std::unique_lock<std::mutex> ul(mtxW);
 
-			while (Msg_.size() >= size_ && !stopped.load())
+			while (Msg_.size() != 0 && Msg_.size() >= size_ && !stopped.load())
 			{
 				if (std::cv_status::timeout == cv_w.wait_for(ul, std::chrono::milliseconds(200)))
 				{
