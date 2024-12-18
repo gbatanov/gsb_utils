@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(gsbutils LANGUAGES CXX VERSION 0.13.52)
+project(gsbutils LANGUAGES CXX VERSION 0.13.54)
 
 # Включение горячей перезагрузки для компиляторов MSVC, если поддерживается.
 if (POLICY CMP0141)
@@ -68,13 +68,15 @@ if(${MAIN_PROJECT})
     set(LIB_INSTALL_DIR ${PREFIX}/lib  )
     set(SYSCONFIG_INSTALL_DIR "" )
 
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${INCLUDE_INSTALL_DIR}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I${INCLUDE_INSTALL_DIR} -I${PROJECT_SOURCE_DIR}")
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}  -L${LIB_INSTALL_DIR}")
 
     if(TEST)
-        add_executable(test test/example.cpp)
+        add_executable(test "test/example.cpp" )
+        add_executable(test-chan "test/test-chan.cpp" )
+        add_executable(test-context "test/test-context.cpp" )
         target_link_libraries(test PUBLIC gsbutils)
-         add_library(${PROJECT_NAME} STATIC ${SOURCES} "version.h")
+        add_library(${PROJECT_NAME} STATIC ${SOURCES} "version.h")
     else()
         add_library(${PROJECT_NAME} SHARED ${SOURCES} "version.h")
     endif() 
@@ -107,3 +109,4 @@ if(${MAIN_PROJECT})
 else()
       add_library(${PROJECT_NAME}${SUFF} STATIC ${SOURCES})
 endif()
+

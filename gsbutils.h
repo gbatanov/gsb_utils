@@ -31,6 +31,7 @@ namespace gsbutils
 #include "DDate.h"
 #include "Channel.h"
 #include "thread_pool.h"
+#include "Context.h"
 }
 
 #ifdef Win32
