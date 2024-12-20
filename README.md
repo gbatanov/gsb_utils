@@ -1,6 +1,6 @@
 ## Различные вспомогательные утилиты для проекта Zhub2
 
-### gsbutils::(функции отладочного вывода)
+### gsbutils::DDebug (функции отладочного вывода)
 В основном коде при старте вызываем
 ```
     gsbutils::DDebug::init(0, NULL); // или gsbutils::DDebug::init(1, (const char*)"logname");
