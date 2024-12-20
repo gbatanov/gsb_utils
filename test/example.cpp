@@ -10,18 +10,16 @@ gsbutils::Channel<std::string> chan(1);
 
 static void cbfunc()
 {
-    INFOLOG("Timer1 done\n","");
     chan.write("chan_msg");
 }
 static void cbfunc2()
 {
-   gsbutils::dprintf(1, "Timer2 cycle\n","");
+   std::cout << "Timer2 cycle\n";
 }
+
 int main(int argc, char **argv)
 {
-    //    chan = std::make_shared<gsbutils::Channel<std::string>>(1);
-    gsbutils::init(0, (const char *)"gsb");
-    gsbutils::set_debug_level(3);
+
     std::cout << (gsbutils::DDate::current_time()).c_str() << std::endl;
 
     std::string ts1 = "iuyoyoiu";
@@ -38,25 +36,25 @@ int main(int argc, char **argv)
 
     std::string primTrim = "\t   test string trim  \r";
     std::string afterTrim = gsbutils::SString::trim(primTrim);
-    gsbutils::dprintf(1, "%s\n", afterTrim.c_str());
+    std::cout << afterTrim.c_str() << std::endl;
 
     std::string splitString = "eeg, egrwe,etwettut";
     std::vector<std::string> splittedString = gsbutils::SString::split(splitString, ",");
 
     for (auto & str : splittedString){
-        gsbutils::dprintf(1, "%s\n", str.c_str());
+        std::cout << str.c_str() << std::endl;
     }
 
-    gsbutils::dprintf(1, "Час дня: %d \n", gsbutils::DDate::get_hour_of_day());
+    std::cout << "Час дня: " << gsbutils::DDate::get_hour_of_day() << std::endl;
 
     gsbutils::TTimer t(10, cbfunc);
     t.run();
-    INFOLOG("Timer1 started\n","");
+    std::cout << "Timer1 started\n";
     std::string inMsg = "";
 
     // Здесь будет задержка на 10 секунд, пока коллбэк функция таймера не запишет в канал
     inMsg = chan.read(NULL);
-    INFOLOG("after Timer1 inMsg= %s \n", inMsg.c_str());
+    std::cout << "after Timer1 inMsg= " <<  inMsg.c_str() << std::endl;
     gsbutils::CycleTimer tc(1, cbfunc2);
     tc.run();
 
@@ -76,6 +74,5 @@ int main(int argc, char **argv)
     // и вывод циклического таймера каждую секунду
     std::this_thread::sleep_for(std::chrono::seconds(20));
 
-    gsbutils::stop();
     return 0;
 }
