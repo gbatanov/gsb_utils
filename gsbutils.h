@@ -33,6 +33,7 @@ namespace gsbutils
 #include "Channel.h"
 #include "ThreadPool.h"
 #include "Context.h"
+#include "Debug.h"
 }
 
 #endif

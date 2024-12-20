@@ -1,6 +1,12 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
+#include "version.h"
+#include <string>
+#include <thread>
+#include <atomic>
+#include <mutex>
+#include <chrono>
 #include <condition_variable>
 
 #ifdef Win32
@@ -25,6 +31,7 @@ constexpr auto LOG_DEBUG = 1;
 #define MSG_BUFF_SIZE  4096 
 #endif
 
+
 class DDebug {
 
 public:
@@ -41,7 +48,7 @@ public:
 			std::unique_lock<std::mutex> lk(cv_m);
 			while (Flag.load())
 			{
-				if (std::cv_status::timeout == cv.wait_for(lk, std::chrono::seconds(2)))
+				if (std::cv_status::timeout == DDebug::cv.wait_for(lk, std::chrono::seconds(2)))
 				{
 					continue;
 				}
@@ -84,9 +91,10 @@ public:
 #ifndef Win32
 		if (output)
 			closelog();
-		else if (msgt.joinable())
+		else
 #endif
-			msgt.join();
+			if (msgt.joinable())
+				msgt.join();
 	}
 
 	static void set_flag(bool flag)
@@ -119,7 +127,7 @@ public:
 			va_end(ap);
 			std::lock_guard<std::mutex> lg(log_mutex);
 			msg_queue.push(std::string(buf));
-			cv.notify_one();
+			DDebug::cv.notify_one();
 		}
 	}
 
@@ -153,7 +161,7 @@ public:
 				strncat(buf, buf1, len1);
 				std::lock_guard<std::mutex> lg(log_mutex);
 				msg_queue.push(std::string(buf));
-				cv.notify_one();
+				DDebug::cv.notify_one();
 			}
 #ifndef Win32
 			else
@@ -166,7 +174,7 @@ public:
 	static std::queue<std::string> msg_queue;
 	static int debug_level;
 	static std::atomic<bool> Flag;
-	static int output ; // 0 - console, default 1 - syslog
+	static int output; // 0 - console, default 1 - syslog
 	static std::thread msgt;
 
 };

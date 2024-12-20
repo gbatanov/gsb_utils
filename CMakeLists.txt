@@ -51,7 +51,7 @@ set(PROJECT_DESCRIPTION "Библиотека утилит")
 
 if(TEST)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -I./../../ -I./../../../ -I./../")
-    add_executable(test "test/example.cpp" )
+    add_executable(test "test/example.cpp")
     add_executable(test-chan "test/test-chan.cpp" )
     add_executable(test-context "test/test-context.cpp" )
 endif()
