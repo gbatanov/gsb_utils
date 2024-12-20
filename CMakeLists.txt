@@ -55,4 +55,3 @@ if(TEST)
     add_executable(test-chan "test/test-chan.cpp" )
     add_executable(test-context "test/test-context.cpp" )
 endif()
-

@@ -11,13 +11,11 @@ class Context
 {
 public:
 	Context() {
-		std::cout << "default constructor\n";
 		timeout_ = 0;
 		done_ = false;
 		tmr = nullptr;
 	}
 	Context(Context& cont) {
-		std::cout << "copy constructor\n";
 		timeout_ = cont.timeout_;
 		done_ = false;
 		parent = &cont;
@@ -26,7 +24,6 @@ public:
 
 	}
 	~Context() {
-		std::cout << "destructor\n";
 		if (tmr)
 			tmr->stop();
 		done_ = true;
@@ -36,6 +33,11 @@ public:
 	}
 	static Context* create() {
 		Context* ctx = new Context;
+		return ctx;
+
+	}
+	static Context* copy(Context* ctx_) {
+		Context* ctx = new Context(*ctx_);
 		return ctx;
 
 	}
@@ -56,7 +58,6 @@ public:
 	}
 
 	void Cancel() {
-		std::cout << "Cancel\n";
 		done_ = true;
 		for (Context* a : this->Childrens) {
 			a->Cancel();
