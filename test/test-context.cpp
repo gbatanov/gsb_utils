@@ -5,51 +5,77 @@
 #include <gsbutils.h>
 
 using namespace std;
+using namespace gsbutils;
 
-static void thread1(bool* res) {
-	gsbutils::TTimer t(6);
+Context* ctxmain = Context::create();
+
+static void thread1(Context* ctx, bool* res) {
+	TTimer t(6);
 	t.run();
 	int i = 0;
-	while (!t.done) {
+	while (!ctx->Done() && !t.done) {
 		this_thread::sleep_for(1000ms);
-		cout << format("Work {}", i) << endl;
+		cout << format("Work1 {}\n", i);
+		i++;
+	}
+	if (t.done) {
+		if (res)
+			*res = true;
+		return;
+	}
+	if (ctx->Done()) {
+		if (res)
+			*res = false;
+		return;
+	}
+	if (res)
+		*res = false;
+}
+
+static void thread2(Context* ctx, bool* res) {
+	int i = 0;
+	while (!ctx->Done()) {
+		this_thread::sleep_for(1000ms);
+		cout << format("Work2 {}\n", i);
 		i++;
 	}
 	if (res)
-		*res = true;
+		*res = false;
 }
 
-static bool long_func(gsbutils::Context* ctx) {
-	ctx->start();
-	bool tres = false;
-	thread t1(thread1, &tres);
-	while (!ctx->Done()) {
-		if (tres) {
-			// функция завешилась до таймаута
-			// несмотря на это, надо явно ждать завершения потока,
-			// иначеен ошибка!
-			if (t1.joinable())
-				t1.join();
-			return true;
-		}
-	}
-
-	// таймаут сработал раньше
-	t1.detach();
-	return false;
-
+static void ctxcancel() {
+	ctxmain->Cancel();
 }
 
 int main(int argc, char** argv)
 {
-	gsbutils::Context* ctx = gsbutils::Context::create_with_timeout(10);
-	bool res = long_func(ctx);
+	bool res1 = false;
+	bool res2 = false;
 
-	if (res) {
-		cout << "good\n";
+	Context* ctx = Context::create_with_timeout(ctxmain, 12);
+
+	TTimer t(8, ctxcancel);
+	t.run();
+
+	thread t1(thread1, ctx, &res1); // отменяется по таймауту 4 секунды
+	thread t2(thread2, ctxmain, &res2);// глобальная отмена через 8 секунд
+	if (t1.joinable())
+		t1.join();
+	if (t2.joinable())
+		t2.join();
+
+	if (res1) {
+		cout << "good1\n";
 	}
 	else {
-		cout << "\nbad\n";
+		cout << "\nbad1\n";
 	}
+	if (res2) {
+		cout << "good2\n";
+	}
+	else {
+		cout << "\nbad2\n";
+	}
+
 
 }
