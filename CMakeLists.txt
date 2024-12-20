@@ -31,7 +31,7 @@ endif()
 message(STATUS "${PROJECT_NAME} build type: ${CMAKE_BUILD_TYPE}")
 
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
-configure_file(version.h.in ../../../version.h)
+    configure_file(version.h.in ../../../version.h)
 else()
 if(${MAIN_PROJECT})
     configure_file(version.h.in ../version.h)
@@ -55,3 +55,4 @@ if(TEST)
     add_executable(test-chan "test/test-chan.cpp" )
     add_executable(test-context "test/test-context.cpp" )
 endif()
+
