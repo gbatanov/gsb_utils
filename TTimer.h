@@ -91,7 +91,10 @@ public:
 	/// если нет - запускает таймер с заданным периодом.
 	void run(uint64_t period)
 	{
-		done.store(false);
+		if (tctx->Done())
+			return;
+
+		done_.store(false);
 
 		if (is_active())
 		{
@@ -110,17 +113,24 @@ public:
 	/// Повторный запуск при запущенном таймере игнорируется.
 	void run()
 	{
+		if (tctx->Done())
+			return;
 		if (is_process())
 			return;
 
 		std::lock_guard<std::mutex> lg(period_mtx_);
 		period_ = periodDefault_;
-		done.store(false);
+		done_.store(false);
 		active_.store(true);
 		cv_timer.notify_one();
 	}
 
-	std::atomic<bool> done{ false }; // включаем при срабатывании таймера
+	bool Done() {
+		done_.store(done_.load() || tctx->Done());
+
+		return done_.load();
+	}
+
 
 protected:
 	/// Создаю  рабочий поток
@@ -170,7 +180,7 @@ protected:
 					cv_timer.notify_one();
 				}
 				else {
-					done.store(true);
+					done_.store(true);
 				}
 			}
 		} // while
@@ -192,6 +202,7 @@ protected:
 			return 0;
 	}
 
+	std::atomic<bool> done_{ false };      // включаем при срабатывании таймера
 	uint64_t period_{ 0 };                // Рабочий счетчик, изначально содержит рабочий период
 	uint64_t periodDefault_{ 0 };         // Дефолтный период, задается в конструкторе
 	cb_timer cb_func_;                    // Коллбэк-функция, задается в конструкторе

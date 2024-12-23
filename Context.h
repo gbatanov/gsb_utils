@@ -73,6 +73,10 @@ public:
 		return done_;
 	}
 
+	Context* get_parent() {
+		return parent;
+	}
+
 	void run_timer()
 	{
 		tmr = std::thread(&Context::process, this);

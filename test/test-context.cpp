@@ -12,12 +12,12 @@ static void thread1(gsbutils::Context* ctx, bool* res) {
 	gsbutils::TTimer t(ctx,6);
 	t.run();
 	int i = 0;
-	while (!ctx->Done() && !t.done) {
+	while (!ctx->Done() && !t.Done()) {
 		this_thread::sleep_for(1000ms);
 		cout << format("Work1 {}\n", i);
 		i++;
 	}
-	if (t.done) {
+	if (t.Done()) {
 		if (res)
 			*res = true;
 		return;
@@ -56,7 +56,7 @@ int main(int argc, char** argv)
 	gsbutils::TTimer t(ctx,8, ctxcancel);
 	t.run();
 
-	thread t1(thread1, ctx, &res1); // отменяется по таймауту 4 секунды
+	thread t1(thread1, ctx, &res1); // отменяется по таймауту через 12 секунд (выходит сам через 6)
 	thread t2(thread2, ctxmain, &res2);// глобальная отмена через 8 секунд
 	if (t1.joinable())
 		t1.join();
