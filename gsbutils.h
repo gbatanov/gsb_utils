@@ -27,12 +27,12 @@
 /// @brief Набор полезных мне утилит
 namespace gsbutils
 {
+#include "Context.h"
 #include "SStrings.h"
 #include "TTimer.h"
 #include "DDate.h"
 #include "Channel.h"
 #include "ThreadPool.h"
-#include "Context.h"
 #include "Debug.h"
 }
 

@@ -1,5 +1,5 @@
-#ifndef DEBUG_H
-#define DEBUG_H
+#ifndef DDEBUG_H
+#define DDEBUG_H
 
 #include "version.h"
 #include <string>
@@ -10,7 +10,9 @@
 #include <condition_variable>
 
 #ifdef Win32
-constexpr auto LOG_DEBUG = 1;
+#ifndef LOG_DEBUG
+#define LOG_DEBUG 1
+#endif
 #endif
 
 // в маке пишет в сислог, но посмотреть можно только командой в консоли: (gsblog - имя программы)
@@ -42,11 +44,11 @@ public:
 
 	static void printMsg()
 	{
-		while (Flag.load())
+		while (!dctx->Done())
 		{
 			std::string msg;
 			std::unique_lock<std::mutex> lk(cv_m);
-			while (Flag.load())
+			while (!dctx->Done())
 			{
 				if (std::cv_status::timeout == DDebug::cv.wait_for(lk, std::chrono::seconds(2)))
 				{
@@ -61,7 +63,7 @@ public:
 			lk.unlock();
 			{
 				std::lock_guard<std::mutex> lg(log_mutex);
-				while (!msg_queue.empty() && Flag.load())
+				while (!msg_queue.empty() && !dctx->Done())
 				{
 					msg = msg_queue.front();
 					msg_queue.pop();
@@ -73,10 +75,11 @@ public:
 	}
 
 
-	static void init(int output_, const char* name)
+	static void init(Context* ctx, int output_, const char* name)
 	{
+		dctx = Context::copy(ctx);
 		output = output_ == 0 ? 0 : 1;
-		Flag.store(true);
+		//		Flag.store(true);
 #ifndef Win32
 		if (output)
 			openlog(name, LOG_PID, LOG_LOCAL7); //(local7.log)
@@ -87,7 +90,8 @@ public:
 
 	static void stop()
 	{
-		Flag.store(false);
+		dctx->Cancel();
+		//		Flag.store(false);
 #ifndef Win32
 		if (output)
 			closelog();
@@ -97,10 +101,7 @@ public:
 				msgt.join();
 	}
 
-	static void set_flag(bool flag)
-	{
-		Flag.store(flag);
-	}
+
 	/// @brief
 	/// @param level 0 отключает всякий отладочный вывод куда-либо
 	static void set_debug_level(int level)
@@ -112,8 +113,10 @@ public:
 	{
 		if (output != 0)
 			return;
+
 		if (level > LOG_DEBUG)
 			level = LOG_DEBUG;
+
 		if (level <= debug_level)
 		{
 			char buf[MSG_BUFF_SIZE]{ 0 };
@@ -173,10 +176,9 @@ public:
 	static std::mutex log_mutex, cv_m;
 	static std::queue<std::string> msg_queue;
 	static int debug_level;
-	static std::atomic<bool> Flag;
 	static int output; // 0 - console, default 1 - syslog
 	static std::thread msgt;
-
+	static Context* dctx;
 };
 
 #endif
