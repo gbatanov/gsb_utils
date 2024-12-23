@@ -5,12 +5,11 @@
 #include <gsbutils.h>
 
 using namespace std;
-using namespace gsbutils;
 
-Context* ctxmain = Context::create();
+gsbutils::Context* ctxmain = gsbutils::Context::create();
 
-static void thread1(Context* ctx, bool* res) {
-	TTimer t(6);
+static void thread1(gsbutils::Context* ctx, bool* res) {
+	gsbutils::TTimer t(ctx,6);
 	t.run();
 	int i = 0;
 	while (!ctx->Done() && !t.done) {
@@ -32,7 +31,7 @@ static void thread1(Context* ctx, bool* res) {
 		*res = false;
 }
 
-static void thread2(Context* ctx, bool* res) {
+static void thread2(gsbutils::Context* ctx, bool* res) {
 	int i = 0;
 	while (!ctx->Done()) {
 		this_thread::sleep_for(1000ms);
@@ -52,9 +51,9 @@ int main(int argc, char** argv)
 	bool res1 = false;
 	bool res2 = false;
 
-	Context* ctx = Context::create_with_timeout(ctxmain, 12);
+	gsbutils::Context* ctx = gsbutils::Context::create_with_timeout(ctxmain, 12);
 
-	TTimer t(8, ctxcancel);
+	gsbutils::TTimer t(ctx,8, ctxcancel);
 	t.run();
 
 	thread t1(thread1, ctx, &res1); // отменяется по таймауту 4 секунды

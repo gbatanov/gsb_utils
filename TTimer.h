@@ -1,6 +1,8 @@
 #ifndef GSB_TTIMER_H
 #define GSB_TTIMER_H
 
+#include "Context.h"
+
 // Класс потоко-безопасного неблокирующего таймера с секундной дискретностью
 // TTimer - однократный запуск командой run
 // CycleTimer - командой run запускается циклический таймер, последующие вызовы игнорируются
@@ -16,9 +18,12 @@ public:
 	/// @brief Конструктор таймера
 	/// @param period В секундах
 	/// @param cb_func  Коллбэк-функция, вызываемая при срабатывании таймера
-	TTimer(uint64_t period, cb_timer cb_func) : period_(period), cb_func_(cb_func)
+	TTimer(gsbutils::Context* ctx, uint64_t period, cb_timer cb_func) : period_(period), cb_func_(cb_func)
 	{
-		Flag.store(true);
+		if (ctx)
+			tctx = gsbutils::Context::copy(ctx);
+		else
+			tctx = gsbutils::Context::create();
 		active_.store(false);
 		if (period > 0)
 			periodDefault_ = period;
@@ -26,10 +31,13 @@ public:
 	}
 	/// @brief Конструктор таймера без коллбэк-функции
 	 /// @param period В секундах
-	TTimer(uint64_t period) : period_(period)
+	TTimer(gsbutils::Context* ctx, uint64_t period) : period_(period)
 	{
+		if (ctx)
+			tctx = gsbutils::Context::copy(ctx);
+		else
+			tctx = gsbutils::Context::create();
 		cb_func_ = nullptr;
-		Flag.store(true);
 		active_.store(false);
 		if (period > 0)
 			periodDefault_ = period;
@@ -38,19 +46,14 @@ public:
 
 	~TTimer()
 	{
-		if (Flag.load())
-			stop();
-	}
-
-	void set_callback(cb_timer cb_func) {
-		cb_func_ = cb_func;
+		tctx->Cancel();
+		stop();
 	}
 
 	/// @brief Останавливает все процессы таймера
 	void stop()
 	{
-		Flag.store(false);
-
+		tctx->Cancel();
 		cv_timer.notify_all();
 		reset();
 		cb_func_ = nullptr;
@@ -133,22 +136,23 @@ protected:
 
 	void process()
 	{
-		while (Flag.load())
+		while (!tctx->Done())
 		{
 			std::unique_lock<std::mutex> ul(cv_timer_mutex);
 			cv_timer.wait(ul, [this]()
-				{ return active_.load() || !Flag.load(); });
-			while (dec_period() && Flag.load())
+				{ return active_.load() || tctx->Done(); });
+			while (dec_period() && !tctx->Done())
 			{
 				std::this_thread::sleep_for(std::chrono::seconds(1));
 			}
-			if (0 == dec_period() && Flag.load())
+			if (0 == dec_period() && !tctx->Done())
 			{
 				active_.store(false);
 				if (cb_func_) {
 					process_.store(true);
 					// Исключения в коллбэк-функции перехватываем, чтобы не влияли на сам таймер
 					// коллбэк-функция должна быть максимально короткой, если таймер работает циклически
+					// TODO: отмена коллбэк-функции при отмене контекста
 					try
 					{
 						cb_func_();
@@ -159,23 +163,24 @@ protected:
 					process_.store(false);
 				}
 				ul.unlock();
-				if (isCycle && Flag.load())
+				if (isCycle && !tctx->Done())
 				{
 					period_ = periodDefault_;
 					active_.store(true);
 					cv_timer.notify_one();
 				}
-				else if (Flag.load()) {
+				else {
 					done.store(true);
 				}
 			}
-		} // while Flag
+		} // while
+		active_.store(false);
 	}
 
 	/// Уменьшает счетчик таймера на единицу до достижения нуля.
 	uint64_t dec_period()
 	{
-		if (!Flag.load())
+		if (tctx->Done())
 			return 0;
 		std::lock_guard<std::mutex> lg(period_mtx_);
 		if (period_ > 0)
@@ -189,22 +194,22 @@ protected:
 
 	uint64_t period_{ 0 };                // Рабочий счетчик, изначально содержит рабочий период
 	uint64_t periodDefault_{ 0 };         // Дефолтный период, задается в конструкторе
-	cb_timer cb_func_;                  // Коллбэк-функция, задается в конструкторе
-	std::mutex period_mtx_;             // Мьютекс на изменения периода
+	cb_timer cb_func_;                    // Коллбэк-функция, задается в конструкторе
+	std::mutex period_mtx_;               // Мьютекс на изменения периода
 	std::atomic<bool> active_{ false };   // Состояние процесса изменения периода
 	std::atomic<bool> process_{ false };  // Состояние процесса выполнения коллбэк-функции
-	std::thread tmr;                    // Рабочие потоки
-	std::condition_variable cv_timer{}; // Условная переменная для таймера
-	std::mutex cv_timer_mutex{};        // Мьютекс на условную переменную для таймера
-	std::atomic<bool> Flag{ true };       // Флаг разрешения работы внутренним потокам
+	std::thread tmr;                      // Рабочие потоки
+	std::condition_variable cv_timer{};   // Условная переменная для таймера
+	std::mutex cv_timer_mutex{};          // Мьютекс на условную переменную для таймера
 	bool isCycle{ false };                // Признак циклического самозапуска
 	bool inited = false;
+	gsbutils::Context* tctx;
 };
 
-class CycleTimer : public TTimer
+class CycleTimer : public gsbutils::TTimer
 {
 public:
-	CycleTimer(uint64_t period, cb_timer cb_func) : TTimer(period, cb_func)
+	CycleTimer(gsbutils::Context* ctx, uint64_t period, cb_timer cb_func) : gsbutils::TTimer(ctx, period, cb_func)
 	{
 		isCycle = true;
 	}

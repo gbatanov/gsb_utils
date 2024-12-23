@@ -64,7 +64,7 @@ int main(int argc, char** argv)
 
 	DDebug::dprintf(3, "Hour of day: %d\n", DDate::get_hour_of_day());
 
-	TTimer t(6, cbfunc);
+	gsbutils::TTimer t(ctx,6, cbfunc);
 	t.run();
 	DDebug::dprintf(3, "Timer1 started\n");
 	std::string inMsg = "";
@@ -72,7 +72,7 @@ int main(int argc, char** argv)
 	// Здесь будет задержка, пока коллбэк функция таймера не запишет в канал
 	inMsg = chan.read(NULL);
 	DDebug::dprintf(3, "after Timer1 inMsg=%s \n", inMsg.c_str());
-	CycleTimer tc(1, cbfunc2);
+	gsbutils::CycleTimer tc(ctx,1, cbfunc2);
 	tc.run();
 
 	std::string url = "qwewr=kjhkjh&tetyeye&uio=333";
