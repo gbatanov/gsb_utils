@@ -23,3 +23,13 @@
 ```
 gsbutils::DDebug::stop();
 ```
+
+
+#### Разное:
+```
+std::string f(std::string_view runtime_format_string)
+{
+    // return std::format(runtime_format_string, "foo", "bar"); // error
+    return std::vformat(runtime_format_string, std::make_format_args("foo", "bar")); // OK
+}
+```

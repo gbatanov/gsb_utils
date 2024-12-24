@@ -5,6 +5,10 @@
 #include <cstdint>
 #include <vector>
 #include <thread>
+#include <algorithm>
+
+
+
 
 class Context
 {
@@ -12,24 +16,33 @@ public:
 	// конструктор по умолчанию
 	Context() {
 		timeout_ = 0;
-		done_ = false;
+		done_.store(false);
 	}
 	// конструктор копирования
 	Context(Context& cont) {
 		timeout_ = cont.timeout_;
-		done_ = false;
+		done_.store(cont.done_.load());
 		parent = &cont;
 		parent->Childrens.push_back(this);
-		//		tmr = nullptr;
-
 	}
 	// деструктор
 	~Context() {
-		//		if (tmr)
-		//			tmr->stop();
-		done_ = true;
+		done_.store(true);
+		if (err_code_ == -1)
+			err_code_ = 0;
 		for (Context* a : this->Childrens) {
 			delete a;
+		}
+		if (parent) {
+			parent->remove_children(this);
+		}
+	}
+	// Удаление дочернего элемента из списка
+	void remove_children(Context* ctx) {
+		typedef std::vector<Context*>::iterator CtxIterator;
+		CtxIterator elem = std::find(Childrens.begin(), Childrens.end(), ctx);
+		if (elem != Childrens.end()) {
+			Childrens.erase(elem);
 		}
 	}
 	// пустой контекст
@@ -60,17 +73,22 @@ public:
 	// Отмена контекста, отмена распространяется по цепочке на всех потомков,
 	// включая контексты с таймером и дефолтные
 	void Cancel() {
-		done_ = true;
+		done_.store(true);
+		err_code_ = 1;
 		for (Context* a : this->Childrens) {
 			a->Cancel();
 		}
 	}
 
-	// Признак завершения выполнения, все функции с этим контекстом и их потомки должны завершиться
+	// Признак завершения выполнения, если true, все функции с этим контекстом и их потомки должны завершиться
 	bool Done() {
 		if (parent)
 			done_.store(done_.load() || parent->done_.load());
 		return done_;
+	}
+
+	uint8_t Error() {
+		return err_code_;
 	}
 
 	Context* get_parent() {
@@ -84,6 +102,7 @@ public:
 		active_.store(true);
 		cv_timer.notify_one();
 	}
+
 protected:
 	/// Уменьшает счетчик таймера на единицу до достижения нуля.
 	uint64_t dec_period()
@@ -98,6 +117,7 @@ protected:
 		else
 			return 0;
 	}
+	// рабочий процесс таймера
 	void process()
 	{
 		std::unique_lock<std::mutex> ul(cv_timer_mutex);
@@ -107,27 +127,32 @@ protected:
 		{
 			std::this_thread::sleep_for(std::chrono::seconds(1));
 		}
-		if (0 == dec_period() && !Done())
-		{
+		if (Done()) {
 			active_.store(false);
-			ul.unlock();
-			done_.store(true);
+			return;
 		}
+		active_.store(false);
+		done_.store(true);
+		err_code_ = 2;
 
+		ul.unlock();
 	}
 
 
 	Context* parent = nullptr;
+	// -1 - не установлен
+	// 0 - нет ошибки, контекст завершился по завершению потока (функции)
+	// 1 - контекст завершился по отмене (вызвана функция отмены Cancel())
+	// 2 - контекст завершился по тайм-ауту
+	int8_t err_code_ = -1;
 	std::vector<Context*>Childrens = {};
 	std::atomic<bool> done_{ false };
 	uint64_t timeout_ = 0;
-	uint64_t period_{ 0 };                // Рабочий счетчик, содержит таймаут контекста
-//	std::mutex period_mtx_;             // Мьютекс на изменения периода
-	std::atomic<bool> active_{ false };   // Состояние процесса изменения периода
+	uint64_t period_{ 0 };              // Рабочий счетчик, содержит таймаут контекста
+	std::atomic<bool> active_{ false }; // Состояние процесса изменения периода
 	std::thread tmr;                    // Рабочий поток
 	std::condition_variable cv_timer{}; // Условная переменная для таймера
 	std::mutex cv_timer_mutex{};        // Мьютекс на условную переменную для таймера
-	bool inited = false;
 };
 
 #endif
