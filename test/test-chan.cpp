@@ -6,12 +6,12 @@
 #include <Channel.h>
 
 using namespace std;
-Channel<std::string> chan(0);
+Channel<std::string> chan(3);
 
 static void thread1() {
 	for (int i = 0; i < 20; i++) {
-		std::cout << std::format("Send: {}", "nechto") << i << std::endl;
 		chan.write(std::format("chan_msg {}", i));
+		std::cout << std::format("Send: {} {}\n", "nechto", i);
 		this_thread::sleep_for(100ms);
 	}
 	chan.close();
@@ -53,7 +53,7 @@ static void thread4() {
 
 int main()
 {
-	cout << "Hello Channel, like Go!" << endl;
+	cout << "Hello Channel, like Go!\n";
 
 	std::thread t1(thread1);
 	std::this_thread::sleep_for(4000ms);
