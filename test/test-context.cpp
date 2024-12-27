@@ -48,6 +48,8 @@ static void ctxcancel() {
 
 int main(int argc, char** argv)
 {
+	gsbutils::ConsoleCP cp(1251);
+
 	bool res1 = false;
 	bool res2 = false;
 

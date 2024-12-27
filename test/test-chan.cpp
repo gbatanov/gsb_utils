@@ -3,10 +3,10 @@
 #include <thread>
 #include <format>
 #include <chrono>
-#include <Channel.h>
+#include <gsbutils.h>
 
 using namespace std;
-Channel<std::string> chan(3);
+gsbutils::Channel<std::string> chan(3);
 
 static void thread1() {
 	for (int i = 0; i < 20; i++) {
@@ -53,7 +53,9 @@ static void thread4() {
 
 int main()
 {
-	cout << "Hello Channel, like Go!\n";
+	gsbutils::ConsoleCP cp(1251);
+
+	cout << "Привет Channel, аналог Go!\n";
 
 	std::thread t1(thread1);
 	std::this_thread::sleep_for(4000ms);
