@@ -12,7 +12,7 @@ public:
 	ThreadPool(ThreadPool&) = delete;
 	ThreadPool() {
 		tc = count;
-		std::cout << tc << std::endl;
+		std::cout << (uint16_t)tc << std::endl;
 	};
 
 	~ThreadPool()
@@ -64,7 +64,7 @@ public:
 
 		std::unique_lock<std::mutex> ul(tqMtx);
 		cv_queue.wait(ul, [this]()
-			{ return !taskQueue.empty() || ctx->Done(); });
+			{ return !this->taskQueue.empty() || this->ctx->Done(); });
 
 		if (ctx->Done())
 			return cmd;
@@ -87,7 +87,7 @@ protected:
 private:
 	gsbutils::Context* ctx = nullptr;
 
-	uint8_t tc{ count }; // количество потоков в пуле
+	uint8_t tc{ 2 }; // количество потоков в пуле
 
 	/// @brief Функция потока
 	void on_command()
