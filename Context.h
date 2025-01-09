@@ -8,8 +8,6 @@
 #include <algorithm>
 
 
-
-
 class Context
 {
 public:
@@ -25,9 +23,26 @@ public:
 		parent = &cont;
 		parent->Childrens.push_back(this);
 	}
+	// опрератор присваивания
+	Context& operator=(Context& cont) {
+		if (this == &cont)
+			return *this;
+		timeout_ = cont.timeout_;
+		done_.store(cont.done_.load());
+		parent = &cont;
+		parent->Childrens.push_back(this);
+		return *this;
+	}
 	// деструктор
 	~Context() {
+#ifdef DEBUG
+		std::cout << "Context destructor\n";
+#endif
 		done_.store(true);
+		cv_timer.notify_one();
+		if (tmr.joinable()) {
+			tmr.join();
+		}
 		if (err_code_ == -1)
 			err_code_ = 0;
 		for (Context* a : this->Childrens) {
@@ -46,23 +61,23 @@ public:
 		}
 	}
 	// пустой контекст
-	static Context* create() {
-		Context* ctx = new Context;
-		return ctx;
-
-	}
+//	static Context* create() {
+//		Context* ctx = new Context;
+//		return ctx;
+//
+//	}
 	// копирование контекста
-	static Context* copy(Context* ctx_) {
-		Context* ctx = new Context(*ctx_);
+	static Context copy(Context ctx_) {
+		Context ctx = ctx_;
 		return ctx;
 
 	}
 	// копирование контекста с таймаутом
-	static Context* create_with_timeout(Context* ctx_, uint64_t timeout) {
-		Context* ctx = new Context(*ctx_);
-		ctx->set_timeout(timeout);
+	static Context create_with_timeout(Context& ctx_, uint64_t timeout) {
+		Context ctx = ctx_;
+		ctx.set_timeout(timeout);
 		if (timeout > 0)
-			ctx->run_timer();
+			ctx.run_timer();
 		return ctx;
 	}
 	// установка таймаута

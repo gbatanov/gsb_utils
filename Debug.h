@@ -1,6 +1,9 @@
 #ifndef DDEBUG_H
 #define DDEBUG_H
-
+/*
+ћодуль DDebug находитс€ в стадии доработки.
+Ѕезошибочна€ работа не гарантируетс€!
+*/
 #include "version.h"
 #include <string>
 #include <thread>
@@ -44,26 +47,20 @@ public:
 
 	static void printMsg()
 	{
-		while (!dctx->Done())
+		while (output > -1)
 		{
 			std::string msg;
 			std::unique_lock<std::mutex> lk(cv_m);
-			while (!dctx->Done())
-			{
-				if (std::cv_status::timeout == DDebug::cv.wait_for(lk, std::chrono::seconds(2)))
-				{
-					continue;
-				}
-				else if (!msg_queue.empty())
-				{
-					break;
-				}
-			}
+			cv.wait(lk, []()
+				{ return !msg_queue.empty() || output == -1; });
 
+			if (output == -1) {
+				return;
+			}
 			lk.unlock();
 			{
 				std::lock_guard<std::mutex> lg(log_mutex);
-				while (!msg_queue.empty() && !dctx->Done())
+				while (!msg_queue.empty())
 				{
 					msg = msg_queue.front();
 					msg_queue.pop();
@@ -75,9 +72,8 @@ public:
 	}
 
 
-	static void init(Context* ctx, int output_, const char* name)
+	static void init(gsbutils::Context* ctx, int output_, const char* name)
 	{
-		dctx = Context::copy(ctx);
 		output = output_ == 0 ? 0 : 1;
 		//		Flag.store(true);
 #ifndef Win32
@@ -90,8 +86,12 @@ public:
 
 	static void stop()
 	{
-		dctx->Cancel();
-		//		Flag.store(false);
+		output = -1;
+#ifdef DEBUG
+		std::cout << "DDebug stop\n";
+#endif
+		DDebug::cv.notify_one();
+
 #ifndef Win32
 		if (output)
 			closelog();
@@ -178,7 +178,6 @@ public:
 	static int debug_level;
 	static int output; // 0 - console, default 1 - syslog
 	static std::thread msgt;
-	static Context* dctx;
 };
 
 #endif
