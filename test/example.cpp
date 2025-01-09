@@ -16,7 +16,6 @@ std::queue<std::string>  gsbutils::DDebug::msg_queue;
 int  gsbutils::DDebug::debug_level;
 int  gsbutils::DDebug::output; // 0 - console, default 1 - syslog -1 - stop debug output, close DDebug
 std::thread  gsbutils::DDebug::msgt;
-gsbutils::Context dctx;
 
 static void cbfunc()
 {

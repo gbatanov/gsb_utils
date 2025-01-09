@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(gsbutils LANGUAGES CXX VERSION 0.14.1)
+project(gsbutils LANGUAGES CXX VERSION 0.16.1)
 
 # Включение горячей перезагрузки для компиляторов MSVC, если поддерживается.
 if (POLICY CMP0141)

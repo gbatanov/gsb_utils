@@ -3,16 +3,19 @@
 
 // Пул потоков для проекта Zhub2
 
-typedef void (*thread_func)(void*);
+typedef void (*thread_func)(void *);
 
 template <class T, uint8_t count>
 class ThreadPool
 {
 public:
-	ThreadPool(ThreadPool&) = delete;
-	ThreadPool() {
+	ThreadPool(ThreadPool &) = delete;
+	ThreadPool()
+	{
 		tc = count;
+#ifdef DEBUG
 		std::cout << (uint16_t)tc << std::endl;
+#endif
 	};
 
 	~ThreadPool()
@@ -20,11 +23,10 @@ public:
 		stop_threads();
 	}
 
-	void init_threads(gsbutils::Context* cntx, thread_func handle)
+	void init_threads(gsbutils::Context *cntx, thread_func handle)
 	{
 		ctx = cntx;
 		handle_ = handle;
-		//       uint8_t tc = count;
 		threadVec.reserve(tc);
 		while (tc--)
 			threadVec.push_back(new std::thread(&ThreadPool::on_command, this));
@@ -33,8 +35,8 @@ public:
 	void stop_threads()
 	{
 		ctx->Cancel();
-		cv_queue.notify_all();
-		for (std::thread* t : threadVec)
+		cvQueue.notify_all();
+		for (std::thread *t : threadVec)
 			if (t->joinable())
 				t->join();
 	}
@@ -45,7 +47,7 @@ public:
 			return;
 		std::lock_guard<std::mutex> lg(tqMtx);
 		taskQueue.push(cmd);
-		cv_queue.notify_all();
+		cvQueue.notify_all();
 	}
 
 	// получение команды из очереди
@@ -63,8 +65,8 @@ public:
 		}
 
 		std::unique_lock<std::mutex> ul(tqMtx);
-		cv_queue.wait(ul, [this]()
-			{ return !this->taskQueue.empty() || this->ctx->Done(); });
+		cvQueue.wait(ul, [this]()
+					  { return !this->taskQueue.empty() || this->ctx->Done(); });
 
 		if (ctx->Done())
 			return cmd;
@@ -78,16 +80,15 @@ public:
 		return cmd;
 	}
 
-
 protected:
-	std::vector<std::thread*> threadVec{}; // вектор указателей на поток
-	std::queue<T> taskQueue{};              // очередь команд
-	std::mutex tqMtx{};                     // мьютех на запись/чтение очереди комманд
-	std::condition_variable cv_queue;       // cv на очередь команд
+	std::vector<std::thread *> threadVec{}; // вектор указателей на поток
+	std::queue<T> taskQueue{};				// очередь команд
+	std::mutex tqMtx{};						// мьютех на запись/чтение очереди комманд
+	std::condition_variable cvQueue;		// cv на очередь команд
 private:
-	gsbutils::Context* ctx = nullptr;
+	gsbutils::Context *ctx = nullptr;
 
-	uint8_t tc{ 2 }; // количество потоков в пуле
+	uint8_t tc{2}; // количество потоков в пуле
 
 	/// @brief Функция потока
 	void on_command()
@@ -96,9 +97,10 @@ private:
 		{
 			T cmd = get_command();
 			if (!ctx->Done())
-				handle_((void*)&cmd); // вызов функции-обработчика
+				handle_((void *)&cmd); // вызов функции-обработчика
 		}
 	}
+
 	thread_func handle_ = nullptr; // реальная функция-обработчик команды
 };
 
