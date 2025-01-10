@@ -75,7 +75,7 @@ public:
 	static void init(gsbutils::Context* ctx, int output_, const char* name)
 	{
 		output = output_ == 0 ? 0 : 1;
-		//		Flag.store(true);
+
 #ifndef Win32
 		if (output)
 			openlog(name, LOG_PID, LOG_LOCAL7); //(local7.log)
