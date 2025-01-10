@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.20)
-project(gsbutils LANGUAGES CXX VERSION "0.16.3")
+cmake_minimum_required(VERSION 3.27)
+project(gsbutils LANGUAGES CXX VERSION "0.16.4")
 
 # Включение горячей перезагрузки для компиляторов MSVC, если поддерживается.
 if (POLICY CMP0141)
@@ -33,11 +33,7 @@ message(STATUS "${PROJECT_NAME} build type: ${CMAKE_BUILD_TYPE}")
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
     configure_file(version.h.in ../../../version.h)
 else()
-if(${MAIN_PROJECT})
     configure_file(version.h.in ../version.h)
-else()
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../version.h.in ${CMAKE_CURRENT_SOURCE_DIR}/version.h)
-endif()
 endif()
 
 list( APPEND SOURCES

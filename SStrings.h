@@ -178,7 +178,7 @@ public:
     static std::string urlencode(std::string s)
     {
         const char *str = s.c_str();
-        std::vector<char> v(s.size());
+        std::vector<unsigned char> v(s.size());
         v.clear();
         for (size_t i = 0, l = s.size(); i < l; i++)
         {

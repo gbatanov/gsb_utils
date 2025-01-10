@@ -9,7 +9,7 @@ template <class T, uint8_t count>
 class ThreadPool
 {
 public:
-	ThreadPool(ThreadPool &) = delete;
+	ThreadPool(ThreadPool&) = delete;
 	ThreadPool()
 	{
 		tc = count;
