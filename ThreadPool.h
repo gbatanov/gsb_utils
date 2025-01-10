@@ -5,90 +5,107 @@
 
 typedef void (*thread_func)(void *);
 
-template <class T>
+template <class T, uint8_t count>
 class ThreadPool
 {
 public:
-    ThreadPool()
-    {
-    }
-    ~ThreadPool()
-    {
-        if (flag.load())
-            stop_threads();
-    }
+	ThreadPool(ThreadPool&) = delete;
+	ThreadPool()
+	{
+		tc = count;
+#ifdef DEBUG
+		std::cout << (uint16_t)tc << std::endl;
+#endif
+	};
 
-    void init_threads(thread_func handle, uint8_t count)
-    {
-        handle_ = handle;
-        uint8_t tc = count;
-        threadVec.reserve(tc);
-        while (tc--)
-            threadVec.push_back(new std::thread(&ThreadPool::on_command, this));
-    }
+	~ThreadPool()
+	{
+		stop_threads();
+	}
 
-    void stop_threads()
-    {
-        flag.store(false);
-        cv_queue.notify_all();
-        for (std::thread *t : threadVec)
-            if (t->joinable())
-                t->join();
-    }
-    // добавление команды в очередь
-    void add_command(T cmd)
-    {
-        std::lock_guard<std::mutex> lg(tqMtx);
-        taskQueue.push(cmd);
-        cv_queue.notify_all();
-    }
+	void init_threads(gsbutils::Context *cntx, thread_func handle)
+	{
+		ctx = cntx;
+		handle_ = handle;
+		threadVec.reserve(tc);
+		while (tc--)
+			threadVec.push_back(new std::thread(&ThreadPool::on_command, this));
+	}
 
-    // получение команды из очереди
-    T get_command()
-    {
-        T cmd{};
-        {
-            std::lock_guard<std::mutex> lg(tqMtx);
-            if (!taskQueue.empty())
-            {
-                cmd = taskQueue.front();
-                taskQueue.pop();
-                return cmd;
-            }
-        }
+	void stop_threads()
+	{
+		ctx->Cancel(); // сам объект удалится родительским контекстом
+		cvQueue.notify_all();
+		for (std::thread *t : threadVec)
+		{
+			if (t->joinable())
+				t->join();
+			if (t)
+				delete t;
+		}
+	}
+	// добавление команды в очередь
+	void add_command(T cmd)
+	{
+		if (ctx->Done())
+			return;
+		std::lock_guard<std::mutex> lg(tqMtx);
+		taskQueue.push(cmd);
+		cvQueue.notify_all();
+	}
 
-        std::unique_lock<std::mutex> ul(tqMtx);
-        cv_queue.wait(ul, [this]()
-                      { return !taskQueue.empty() || !flag.load(); });
+	// получение команды из очереди
+	T get_command()
+	{
+		T cmd{};
+		{
+			std::lock_guard<std::mutex> lg(tqMtx);
+			if (!taskQueue.empty())
+			{
+				cmd = taskQueue.front();
+				taskQueue.pop();
+				return cmd;
+			}
+		}
 
-        if (flag.load() && !taskQueue.empty())
-        {
-            cmd = taskQueue.front();
-            taskQueue.pop();
-        }
-        ul.unlock();
-        return cmd;
-    }
+		std::unique_lock<std::mutex> ul(tqMtx);
+		cvQueue.wait(ul, [this]()
+					 { return !this->taskQueue.empty() || this->ctx->Done(); });
 
-    std::atomic<bool> flag{true}; // флаг разрешения работы потоков
+		if (ctx->Done())
+			return cmd;
+
+		if (!taskQueue.empty())
+		{
+			cmd = taskQueue.front();
+			taskQueue.pop();
+		}
+		ul.unlock();
+		return cmd;
+	}
 
 protected:
-    std::vector<std::thread *> threadVec{}; // вектор указателей на поток
-    std::queue<T> taskQueue{};              // очередь команд
-    std::mutex tqMtx{};                     // мьютех на запись/чтение очереди комманд
-    std::condition_variable cv_queue;       // cv на очередь команд
+	std::vector<std::thread *> threadVec{}; // вектор указателей на поток
+	std::queue<T> taskQueue{};				// очередь команд
+	std::mutex tqMtx{};						// мьютех на запись/чтение очереди комманд
+	std::condition_variable cvQueue;		// cv на очередь команд
 private:
-    /// @brief Функция потока
-    void on_command()
-    {
-        while (flag.load())
-        {
-            T cmd = get_command();
-            if (flag.load())
-                handle_((void *)&cmd); // вызов функции-обработчика
-        }
-    }
-    thread_func handle_; // реальная функция-обработчик команды
+	gsbutils::Context *ctx = nullptr;
+
+	uint8_t tc{2}; // количество потоков в пуле
+
+	/// @brief Функция потока
+	void on_command()
+	{
+		while (!ctx->Done())
+		{
+			T cmd = get_command();
+			if (!ctx->Done())
+				handle_((void *)&cmd); // вызов функции-обработчика
+		}
+	}
+
+	thread_func handle_ = nullptr; // реальная функция-обработчик команды
 };
 
 #endif

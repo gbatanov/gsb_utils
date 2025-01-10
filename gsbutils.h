@@ -27,6 +27,7 @@
 /// @brief Набор полезных мне утилит
 namespace gsbutils
 {
+#include "ConsoleCP.h"
 #include "Context.h"
 #include "SStrings.h"
 #include "TTimer.h"

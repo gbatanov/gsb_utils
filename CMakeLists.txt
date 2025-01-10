@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.20)
-project(gsbutils LANGUAGES CXX VERSION 0.14.1)
+cmake_minimum_required(VERSION 3.27)
+project(gsbutils LANGUAGES CXX VERSION "0.16.4")
 
 # Включение горячей перезагрузки для компиляторов MSVC, если поддерживается.
 if (POLICY CMP0141)
@@ -33,11 +33,7 @@ message(STATUS "${PROJECT_NAME} build type: ${CMAKE_BUILD_TYPE}")
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
     configure_file(version.h.in ../../../version.h)
 else()
-if(${MAIN_PROJECT})
     configure_file(version.h.in ../version.h)
-else()
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../version.h.in ${CMAKE_CURRENT_SOURCE_DIR}/version.h)
-endif()
 endif()
 
 list( APPEND SOURCES
@@ -51,7 +47,8 @@ set(PROJECT_DESCRIPTION "Библиотека утилит")
 
 if(TEST)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -I./../../ -I./../../../ -I./../")
-    add_executable(test "test/example.cpp")
-    add_executable(test-chan "test/test-chan.cpp" )
-    add_executable(test-context "test/test-context.cpp" )
+    add_executable(test "test/example.cpp" )
+    add_executable(test-chan "test/test-chan.cpp"  )
+    add_executable(test-context "test/test-context.cpp"  )
+    add_executable(test-pool "test/test-pool.cpp"  )
 endif()
