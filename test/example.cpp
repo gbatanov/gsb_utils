@@ -8,7 +8,7 @@
 typedef void (*tfunc)();
 typedef void (*tfunc_arg)(void*);
 
-using namespace gsbutils;
+gsbutils::Channel < std::string> chan(2);
 
 std::condition_variable gsbutils::DDebug::cv;
 std::mutex  gsbutils::DDebug::log_mutex, gsbutils::DDebug::cv_m;
