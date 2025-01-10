@@ -34,11 +34,15 @@ public:
 
 	void stop_threads()
 	{
-		ctx->Cancel();
+		ctx->Cancel(); // сам объект удалится родительским контекстом
 		cvQueue.notify_all();
 		for (std::thread *t : threadVec)
+		{
 			if (t->joinable())
 				t->join();
+			if (t)
+				delete t;
+		}
 	}
 	// добавление команды в очередь
 	void add_command(T cmd)
@@ -66,7 +70,7 @@ public:
 
 		std::unique_lock<std::mutex> ul(tqMtx);
 		cvQueue.wait(ul, [this]()
-					  { return !this->taskQueue.empty() || this->ctx->Done(); });
+					 { return !this->taskQueue.empty() || this->ctx->Done(); });
 
 		if (ctx->Done())
 			return cmd;
