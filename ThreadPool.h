@@ -3,11 +3,10 @@
 
 // Пул потоков для проекта Zhub2
 
-typedef void (*thread_func)(void *);
-
 template <class T, uint8_t count>
 class ThreadPool
 {
+	typedef void (*thread_func)(T);
 public:
 	ThreadPool(ThreadPool&) = delete;
 	ThreadPool()
@@ -40,8 +39,6 @@ public:
 		{
 			if (t->joinable())
 				t->join();
-			if (t)
-				delete t;
 		}
 	}
 	// добавление команды в очередь
@@ -101,7 +98,7 @@ private:
 		{
 			T cmd = get_command();
 			if (!ctx->Done())
-				handle_((void *)&cmd); // вызов функции-обработчика
+				handle_((T)cmd); // вызов функции-обработчика
 		}
 	}
 
