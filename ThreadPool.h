@@ -9,6 +9,7 @@ class ThreadPool
 	typedef void (*thread_func)(T);
 public:
 	ThreadPool(ThreadPool&) = delete;
+	ThreadPool operator=(ThreadPool&) = delete;
 	ThreadPool()
 	{
 		tc = count;

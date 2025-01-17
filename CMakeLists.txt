@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.27)
-project(gsbutils LANGUAGES CXX VERSION "0.16.6")
+project(gsbutils LANGUAGES CXX VERSION "0.16.7")
 
 # Включение горячей перезагрузки для компиляторов MSVC, если поддерживается.
 if (POLICY CMP0141)
@@ -12,7 +12,7 @@ message(STATUS "${PROJECT_NAME}: ${PROJECT_VERSION}")
 set(MAIN_PROJECT ON)
 
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -I. -DWin32=1")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall  /wd4710 /wd4711 /wd4820 /wd4668 /wd5039 /wd4365 /wd4100 /wd4840 /wd4287 -I. -DWin32=1")
     set(TEST "test")
 else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -I. -pthread  -Wno-unused-result -Wno-unused-variable")

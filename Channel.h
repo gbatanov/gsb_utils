@@ -15,6 +15,7 @@ public:
 	// дефолтный конструктор и конструктор копирования запрещены
 	Channel() = delete;
 	Channel(Channel&) = delete;
+	Channel operator=(Channel&) = delete;
 	Channel(uint64_t size)
 	{
 		size_ = size;
