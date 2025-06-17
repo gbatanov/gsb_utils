@@ -3,8 +3,6 @@
 #include <thread>
 #include <gsbutils.h>
 
-
-
 typedef void (*tfunc)();
 typedef void (*tfunc_arg)(void*);
 

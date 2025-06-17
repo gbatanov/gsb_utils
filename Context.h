@@ -102,7 +102,7 @@ public:
 		return done_;
 	}
 
-	uint8_t Error() {
+	int8_t Error() {
 		return err_code_;
 	}
 

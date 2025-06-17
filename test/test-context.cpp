@@ -7,7 +7,7 @@
 using namespace std;
 typedef void (*cb_timer)(void*);
 
-static void thread1(gsbutils::Context* ctx, bool* res) {
+static void thread1(gsbutils::Context* ctx, bool& res) {
 	gsbutils::Context ctx1 = gsbutils::Context::create_with_timeout(*ctx, 6);
 	int i = 0;
 	while (!ctx1.Done()) {
@@ -15,34 +15,27 @@ static void thread1(gsbutils::Context* ctx, bool* res) {
 		cout << format("Work1 {}\n", i);
 		i++;
 	}
-	if (ctx->Done()) {
-		if (res)
-			*res = false;
-		return;
-	}
-	if (ctx1.Done()) {
-		if (res)
-			*res = true;
-		return;
-	}
-	if (res)
-		*res = false;
+	if (ctx->Done())
+		res = false;
+	else if (ctx1.Done())
+		res = true;
+	else
+		res = false;
 }
 
-static void thread2(gsbutils::Context* ctx, bool* res) {
+static void thread2(gsbutils::Context* ctx, bool& res) {
 	int i = 0;
 	while (!ctx->Done()) {
 		this_thread::sleep_for(1000ms);
 		cout << format("Work2 {}\n", i);
 		i++;
 	}
-	if (res)
-		*res = false;
+	res = false;
 }
 
 // коллбэк-функция таймера с параметром
 static void ctxcancel(void* ctx) {
-	
+
 	cout << "ctxancel\n";
 	static_cast<gsbutils::Context*>(ctx)->Cancel();
 }
@@ -54,14 +47,14 @@ int main(int argc, char** argv)
 	bool res1 = false;
 	bool res2 = false;
 
-	gsbutils::Context ctxmain ;
-	gsbutils::Context ctx = gsbutils::Context::create_with_timeout(ctxmain, 5);
+	gsbutils::Context ctxmain;
+	gsbutils::Context ctx = gsbutils::Context::create_with_timeout(ctxmain, 5); // 5 - bad1, 7 - good1
 
-	gsbutils::TTimer t(&ctxmain, 8, (cb_timer)ctxcancel,(void*) &ctxmain);
+	gsbutils::TTimer t(&ctxmain, (uint64_t)8, (cb_timer)ctxcancel, (void*)&ctxmain);
 	t.run();
 
-	thread t1(thread1, &ctx, &res1); // отменяется по таймауту из ctx через 5 секунд (выходит сам через 6)
-	thread t2(thread2, &ctxmain, &res2);// глобальная отмена через 8 секунд
+	thread t1(thread1, &ctx, std::ref(res1)); // отменяется по таймауту из ctx через 5 секунд (выходит сам через 6)
+	thread t2(thread2, &ctxmain, std::ref(res2));// глобальная отмена через 8 секунд
 	if (t1.joinable())
 		t1.join();
 	if (t2.joinable())
@@ -82,6 +75,4 @@ int main(int argc, char** argv)
 	else {
 		cout << "\nbad2\n";
 	}
-
-
 }

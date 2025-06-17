@@ -16,6 +16,7 @@ class TTimer
 public:
 	TTimer() = delete;
 	TTimer(TTimer&) = delete;
+	TTimer operator=(TTimer&) = delete;
 
 	/// @brief Конструктор таймера
 	/// @param period В секундах
@@ -24,8 +25,6 @@ public:
 	{
 		if (ctx)
 			tctx = *ctx;
-		//		else
-		//			gsbutils::Context tctx ;
 		active_.store(false);
 		if (period > 0)
 			periodDefault_ = period;
@@ -40,8 +39,6 @@ public:
 	{
 		if (ctx)
 			tctx = *ctx;
-		//		else
-		//			gsbutils::Context tctx ;
 		active_.store(false);
 		if (period > 0)
 			periodDefault_ = period;
@@ -62,7 +59,7 @@ public:
 		init();
 	}
 
-	~TTimer()
+	 ~TTimer()
 	{
 		tctx.Cancel();
 		stop();
@@ -248,6 +245,10 @@ protected:
 class CycleTimer : public gsbutils::TTimer
 {
 public:
+	CycleTimer() = delete;
+	CycleTimer(CycleTimer&) = delete;
+	CycleTimer operator=(CycleTimer&) = delete;
+
 	CycleTimer(gsbutils::Context* ctx, uint64_t period, cb_timer cb_func) : gsbutils::TTimer(ctx, period, cb_func)
 	{
 		isCycle = true;

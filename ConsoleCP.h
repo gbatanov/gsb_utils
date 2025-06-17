@@ -9,6 +9,9 @@ class ConsoleCP
 public:
 	ConsoleCP(uint32_t cp)
 	{
+#ifdef UNICODE
+		std::setlocale(LC_ALL, ".UTF8"); // Или ".65001" для UTF-8
+#endif
 		oldin = GetConsoleCP();
 		oldout = GetConsoleOutputCP();
 		SetConsoleCP(cp);

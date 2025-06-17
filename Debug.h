@@ -146,8 +146,9 @@ public:
 
 			if (output == 0)
 			{
+				tm tm;
 				time_t t1 = time(nullptr); // текущее время timestamp
-				tm tm = *localtime(&t1);   // structure
+				localtime_s(&tm,&t1);   // structure
 				len = strftime(buf, sizeof(buf), "%Y/%m/%d %H:%M:%S ", &tm);
 				if (len > -1 && len < MSG_BUFF_SIZE)
 					buf[len] = 0;
@@ -161,7 +162,7 @@ public:
 
 			if (output == 0)
 			{
-				strncat(buf, buf1, len1);
+				strncat_s(buf, buf1, len1);
 				std::lock_guard<std::mutex> lg(log_mutex);
 				msg_queue.push(std::string(buf));
 				DDebug::cv.notify_one();
